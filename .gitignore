@@ -1,0 +1,10 @@
+# Directories
+/bin/
+bin-int/
+
+# Visual studio files and folder
+.vs/
+**.vcxproj.user
+
+# notes file
+**.txt
