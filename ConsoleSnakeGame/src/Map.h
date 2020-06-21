@@ -4,8 +4,6 @@
 #include <unordered_map>
 #include <string>
 
-#include "Snake.h"
-
 struct Cell
 {
     enum class ECellState
@@ -30,26 +28,19 @@ private:
     ECellState mState;
 };
 
-
 class Map
 {
 public:
     Map();
-    ~Map();
 
-    void Init(Position snakeHeadPos);
-    void Update();
-    void Draw(const int score);
+    void Init(const int width, const int height);
+    void Draw(const int score, std::string rank, const int scoreRow, const int rankRow);
     //
-    void MoveSnakeItem(Position prevItemPos, Position nextItemPos, bool isHead = false);
-    void AddSnakeItem(Position newItemPos);
-    Cell::ECellState GetCellState(Position snakeHeadPos) const;
+    Cell::ECellState GetCellState(const int index) const;
+    void SetCell(const int index, const std::string symbolName, const Cell::ECellState state);
 
 private:
-    void SetupWalls();
-    void SetupStartSnakePosition(const Position& snakeHeadPos);
-    int PositionToMapIndex(const Position& pos) const;
-    void GenerateApple();
+    void setupWalls();
 
 private:
     int mWidth;
@@ -57,8 +48,4 @@ private:
 
     std::unordered_map<std::string, char> mCellSymbolNames;
     std::vector<Cell> mCells;
-
-    float mAppleGenTimeCheckpoint;
 };
-
-extern Map gMap;

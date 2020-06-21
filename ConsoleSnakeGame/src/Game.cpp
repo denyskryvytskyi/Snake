@@ -1,77 +1,57 @@
-#include <conio.h>
-#include <ctime>
-#include <windows.h>
-#include <WinUser.h>
+#include <Windows.h>
 
 #include "Game.h"
-#include "GameParams.h"
-
-Map gMap;
-GameParams gGameParams;
 
 Game::Game()
-    :mState(EGameState::Menu)
-    , mSnake()
+    :mState(EGameState::Active)
 {
+    mGameManager = new GameManager;
 }
 
 Game::~Game()
 {
-    delete mSnake;
+    if (mGameManager != nullptr)
+    {
+        delete mGameManager;
+    }
 }
 
 void Game::Init()
 {
-    srand(time(0));
-    int x = rand() % (gGameParams.mWidth - 2) + 1;
-    int y = rand() % (gGameParams.mHeight - 2) + 1;
-    Position startSnakeHeadPos(x, y);
-
-    mSnake = new Snake();
-    mSnake->Init(startSnakeHeadPos);
-    gMap.Init(startSnakeHeadPos);
+    // MenuManager Init
+    // GameManager Init
+    mGameManager->Init();
 }
 
 void Game::ProcessInput()
 {
-    if (_kbhit())
+    // key handling
+    if (mState == EGameState::Menu)
     {
-        char pressedKey = _getch();
-
-        // key handling
-        if (mState == EGameState::Active)
-        {
-            Snake::EDirection newDir = mSnake->GetCurrentDir();
-            switch (pressedKey)
-            {
-            case 'w':
-                newDir = Snake::EDirection::Up;
-                break;
-            case 's':
-                newDir = Snake::EDirection::Down;
-                break;
-            case 'a':
-                newDir = Snake::EDirection::Left;
-                break;
-            case 'd':
-                newDir = Snake::EDirection::Right;
-                break;
-            }
-            mSnake->ChangeDirection(newDir);
-        }
+        // call MenuManager InputHandler
+    }
+    else if (mState == EGameState::Active)
+    {
+        // call GameManager InputHandler
+        mGameManager->InputHandler();
     }
 }
 
 void Game::Update()
 {
-    // Map reconfig
-    mSnake->Update();
-    if (!mSnake->IsAlive())
+    if (mState == EGameState::Menu)
     {
-        mState = EGameState::GameOver;
+        // call MenuManager Update
     }
-
-    gMap.Update();
+    else if (mState == EGameState::Active)
+    {
+        // call GameManager Update
+        mGameManager->Update();
+        if (!mGameManager->IsSnakeAlive())
+        {
+            mState = EGameState::GameOver;
+        }
+    }
 }
 
 void Game::Render()
@@ -79,6 +59,13 @@ void Game::Render()
     // clean screen
     system("cls");
 
-    // redraw cells
-    gMap.Draw(mSnake->GetScore());
+    if (mState == EGameState::Menu)
+    {
+        // call MenuManager Render
+    }
+    else if (mState == EGameState::Active)
+    {
+        // call GameManager Render
+        mGameManager->Render();
+    }
 }

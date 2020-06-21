@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Map.h"
-#include "Snake.h"
+#include "GameManager.h"
 
 class Game
 {
@@ -28,6 +27,6 @@ public:
 
 private:
     EGameState mState;
-    Snake* mSnake;
+    GameManager* mGameManager;
 };
 

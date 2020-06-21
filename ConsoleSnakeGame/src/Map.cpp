@@ -2,13 +2,11 @@
 #include <ctime>
 
 #include "Map.h"
-#include "GameParams.h"
 
 Map::Map()
     : mWidth(0)
     , mHeight(0)
     , mCells()
-    , mAppleGenTimeCheckpoint(0)
 {
     mCellSymbolNames = {
         { "wall", '#' },
@@ -19,32 +17,18 @@ Map::Map()
     };
 }
 
-Map::~Map()
+void Map::Init(const int width, const int height)
 {
+    mWidth = width;
+    mHeight = height;
+
+    setupWalls();
 }
 
-void Map::Init(Position snakeHeadPos)
-{
-    mWidth = gGameParams.mWidth;
-    mHeight = gGameParams.mHeight;
-
-    SetupWalls();
-    SetupStartSnakePosition(snakeHeadPos);
-}
-
-void Map::Update()
-{
-    if (mAppleGenTimeCheckpoint <= 0)
-    {
-        mAppleGenTimeCheckpoint = gGameParams.mAppleGenerateTimeInterval;
-        GenerateApple();
-    }
-    --mAppleGenTimeCheckpoint;
-}
-
-void Map::Draw(const int score)
+void Map::Draw(const int score, std::string rank, const int scoreRow, const int rankRow)
 {
     std::string scoreStr = "\tScore: " + std::to_string(score);
+    std::string rankStr = "\tRank: " + rank;
     std::string map;
 
     int i = 0;
@@ -55,9 +39,13 @@ void Map::Draw(const int score)
         {
             // score calculations
             ++j;
-            if (j == mHeight / 2)
+            if (j == scoreRow)
             {
                 map += scoreStr;
+            }
+            else if (j == rankRow)
+            {
+                map += rankStr;
             }
             // continue map calc
             map += "\n";
@@ -66,38 +54,20 @@ void Map::Draw(const int score)
         map += cell.GetSymbol();
         ++i;
     }
-    std::cout << /*scoreStr << std::endl <<*/ map << std::endl;
+    std::cout << map << std::endl;
 }
 
-void Map::MoveSnakeItem(Position prevItemPos, Position nextItemPos, bool isHead /* = false*/)
+Cell::ECellState Map::GetCellState(const int index) const
 {
-    // передвигаем кусочек змейки на указанную позицию
-    int prevPosIndex = PositionToMapIndex(prevItemPos);
-    int nextPosIndex = PositionToMapIndex(nextItemPos);
-
-    mCells[prevPosIndex].SetState(Cell::ECellState::Empty);
-    mCells[prevPosIndex].SetSymbol(mCellSymbolNames.find("empty")->second);
-
-    std::string symbolName = isHead ? "snake_head" : "snake_body";
-    mCells[nextPosIndex].SetState(Cell::ECellState::Snake);
-    mCells[nextPosIndex].SetSymbol(mCellSymbolNames.find(symbolName)->second);
-}
-
-void Map::AddSnakeItem(Position newItemPos)
-{
-    char symbol = mCellSymbolNames.find("snake_body")->second;
-    Cell snakeItem(symbol, Cell::ECellState::Snake);
-    mCells[PositionToMapIndex(newItemPos)] = snakeItem;
-}
-
-Cell::ECellState Map::GetCellState(Position snakeHeadPos) const
-{
-    int index = PositionToMapIndex(snakeHeadPos);
-
     return mCells[index].GetState();
 }
 
-void Map::SetupWalls()
+void Map::SetCell(const int index, const std::string symbolName, const Cell::ECellState state)
+{
+    mCells[index] = Cell(mCellSymbolNames.find(symbolName)->second, state);
+}
+
+void Map::setupWalls()
 {
     // set walls
     /*
@@ -137,36 +107,6 @@ void Map::SetupWalls()
             {
                 mCells.push_back(Cell());
             }
-        }
-    }
-}
-
-void Map::SetupStartSnakePosition(const Position& snakeHeadPos)
-{
-    int snakeHeadIndex = PositionToMapIndex(snakeHeadPos);
-    mCells[snakeHeadIndex] = Cell(mCellSymbolNames.find("snake_head")->second, Cell::ECellState::Snake);
-}
-
-int Map::PositionToMapIndex(const Position& pos) const
-{
-    return mWidth * pos.GetY() + pos.GetX();
-}
-
-void Map::GenerateApple()
-{
-    srand(time(0));
-    // generate apple on map
-    while (true)
-    {
-        int applePosX = rand() % (mWidth - 2) + 1;
-        int applePosY = rand() % (mHeight - 2) + 1;
-
-        int appleIndex = PositionToMapIndex(Position(applePosX, applePosY));
-        if (mCells[appleIndex].GetState() == Cell::ECellState::Empty)
-        {
-            mCells[appleIndex].SetState(Cell::ECellState::Apple);
-            mCells[appleIndex].SetSymbol(mCellSymbolNames.find("apple")->second);
-            break;
         }
     }
 }

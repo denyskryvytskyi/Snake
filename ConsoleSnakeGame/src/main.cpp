@@ -1,10 +1,8 @@
 #pragma once
 
-#include <iostream>
 #include <windows.h>
 
 #include "Game.h"
-#include "GameParams.h"
 
 bool ShowConsoleCursor(bool show);
 
