@@ -1,10 +1,10 @@
 #include <ctime>
 #include <conio.h>
 #include <windows.h>
-#include <WinUser.h>
 
 #include "GameManager.h"
 #include "GameParams.h"
+#include "defines.h"
 
 GameManager::GameManager()
     : mAppleGenCheckpoint()
@@ -14,6 +14,9 @@ GameManager::GameManager()
     , mUpdateCheckpoint()
     , mUpdateCheckpointGap()
     , mScore()
+    , mRank()
+    , mScoreRowIndex()
+    , mRankRowIndex()
 {
     mSnake = new Snake();
     mMap = new Map();
@@ -34,26 +37,19 @@ GameManager::~GameManager()
 
 void GameManager::Init()
 {
-    mUpdateDt = mGameParams->mSnakeMoveUpdateDt;
-    mUpdateCheckpointGap = mGameParams->mSnakeMoveUpdateGap;
-    mBonusSpeed = mGameParams->mSnakeBonusSpeed;
-    mAppleGenCheckpoint = mGameParams->mAppleGenerateTimeInterval;
-    mUpdateCheckpoint = mUpdateDt;
+    Reset();
 
-    int width = mGameParams->mWidth;
-    int height = mGameParams->mHeight;
-    srand(time(0));
-    int x = rand() % (width / 2) + width / 3;
-    int y = rand() % (height / 2) + height / 3;
-    Position startSnakeHeadPos(x, y);
+    mScoreRowIndex = mGameParams->mScoreRowIndex;
+    mRankRowIndex = mGameParams->mRankRowIndex;
+}
 
-    mSnake->Init(startSnakeHeadPos);
-    mMap->Init(width, height);
+void GameManager::OnStart()
+{
+    Position newSnakeStartPos = getRandStartSnakePos();
+    mSnake->Init(newSnakeStartPos);
+    mMap->Init(mGameParams->mWidth, mGameParams->mHeight);
     // Setup snake head
-    mMap->SetCell(positionToMapIndex(startSnakeHeadPos), "snake_head", Cell::ECellState::Snake);
-
-    mScoreRow = mGameParams->mScoreRowIndex;
-    mRankRow = mGameParams->mRankRowIndex;
+    mMap->SetCell(positionToMapIndex(newSnakeStartPos), "snake_head", Cell::ECellState::Snake);
 }
 
 void GameManager::Update()
@@ -134,33 +130,48 @@ void GameManager::Update()
 void GameManager::Render()
 {
     // redraw cells
-    mMap->Draw(mScore, "snake", mScoreRow, mRankRow);
+    mMap->Draw(mScore, "snake", mScoreRowIndex, mRankRowIndex);
+}
+
+void GameManager::Reset(bool hardReset /*= false*/)
+{
+    mUpdateDt = mGameParams->mSnakeMoveUpdateDt;
+    mUpdateCheckpointGap = mGameParams->mSnakeMoveUpdateGap;
+    mBonusSpeed = mGameParams->mSnakeBonusSpeed;
+    mAppleGenCheckpoint = mGameParams->mAppleGenerateTimeInterval;
+    mUpdateCheckpoint = mUpdateDt;
+
+    if (hardReset)
+    {
+        mMap->Reset();
+        mSnake->Reset();
+
+        mSpeed = 0.0f;
+        mScore = 0;
+        mRank = "";
+    }
 }
 
 void GameManager::InputHandler()
 {
-    if (_kbhit())
+    Snake::EDirection newDir = mSnake->GetCurrentDir();
+    if (GetAsyncKeyState(KEY_UP) || GetAsyncKeyState(KEY_W))
     {
-        char pressedKey = _getch();
-
-        Snake::EDirection newDir = mSnake->GetCurrentDir();
-        switch (pressedKey)
-        {
-        case 'w':
-            newDir = Snake::EDirection::Up;
-            break;
-        case 's':
-            newDir = Snake::EDirection::Down;
-            break;
-        case 'a':
-            newDir = Snake::EDirection::Left;
-            break;
-        case 'd':
-            newDir = Snake::EDirection::Right;
-            break;
-        }
-        mSnake->ChangeDirection(newDir);
+        newDir = Snake::EDirection::Up;
     }
+    if (GetAsyncKeyState(KEY_DOWN) || GetAsyncKeyState(KEY_S))
+    {
+        newDir = Snake::EDirection::Down;
+    }
+    if (GetAsyncKeyState(KEY_LEFT) || GetAsyncKeyState(KEY_A))
+    {
+        newDir = Snake::EDirection::Left;
+    }
+    if (GetAsyncKeyState(KEY_RIGHT) || GetAsyncKeyState(KEY_D))
+    {
+        newDir = Snake::EDirection::Right;
+    }
+    mSnake->ChangeDirection(newDir);
 }
 
 GameManager::ECollisionType GameManager::checkCollision()
@@ -231,4 +242,16 @@ void GameManager::moveSnakeItem(const Position prevItemPos, const Position nextI
 void GameManager::addSnakeItem(const Position newItemPos)
 {
     mMap->SetCell(positionToMapIndex(newItemPos), "snake_body", Cell::ECellState::Snake);
+}
+
+Position GameManager::getRandStartSnakePos()
+{
+    int width = mGameParams->mWidth;
+    int height = mGameParams->mHeight;
+    srand(time(0));
+    int x = rand() % (width / 2) + width / 3;
+    int y = rand() % (height / 2) + height / 3;
+    Position startSnakeHeadPos(x, y);
+
+    return startSnakeHeadPos;
 }

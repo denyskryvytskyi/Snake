@@ -13,13 +13,19 @@ int main()
     Game game;
     game.Init();
 
-    while (game.GetCurrentState() != Game::EGameState::GameOver)
+    while (game.GetCurrentState() != Game::EGameState::Exit)
     {
         game.ProcessInput();
 
         game.Render();
 
         game.Update();
+
+        Game::EGameState state = game.GetCurrentState();
+        if (state == Game::EGameState::GameOver)
+        {
+
+        }
     }
 
     system("pause");

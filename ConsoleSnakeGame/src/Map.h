@@ -35,6 +35,7 @@ public:
 
     void Init(const int width, const int height);
     void Draw(const int score, std::string rank, const int scoreRow, const int rankRow);
+    void Reset();
     //
     Cell::ECellState GetCellState(const int index) const;
     void SetCell(const int index, const std::string symbolName, const Cell::ECellState state);

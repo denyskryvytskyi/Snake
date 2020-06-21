@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\GameParams.cpp" />
+    <ClCompile Include="src\Menu.cpp" />
+    <ClCompile Include="src\MenuManager.cpp" />
     <ClCompile Include="src\GameManager.cpp" />
     <ClCompile Include="src\Snake.cpp" />
     <ClCompile Include="src\Game.cpp" />
@@ -26,6 +29,10 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\common_types.h" />
+    <ClInclude Include="src\Menu.h" />
+    <ClInclude Include="src\MenuManager.h" />
+    <ClInclude Include="src\defines.h" />
     <ClInclude Include="src\GameManager.h" />
     <ClInclude Include="src\Position.h" />
     <ClInclude Include="src\GameParams.h" />

@@ -57,6 +57,11 @@ void Map::Draw(const int score, std::string rank, const int scoreRow, const int 
     std::cout << map << std::endl;
 }
 
+void Map::Reset()
+{
+    mCells.clear();
+}
+
 Cell::ECellState Map::GetCellState(const int index) const
 {
     return mCells[index].GetState();

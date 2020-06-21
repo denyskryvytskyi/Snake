@@ -1,6 +1,4 @@
-#include <mutex>
-
-std::mutex mu;
+#pragma once
 
 class GameParams
 {
@@ -32,15 +30,3 @@ public:
 private:
     static GameParams* instance;
 };
-
-GameParams* GameParams::instance = nullptr; 
-
-GameParams* GameParams::GetInstance()
-{
-    std::lock_guard<std::mutex> lockMY(mu);
-    if (instance == nullptr)
-    {
-        instance = new GameParams();
-    }
-    return instance;
-}

@@ -20,12 +20,17 @@ public:
     ~GameManager();
 
     void Init();
+    void OnStart();
     void Update();
     void Render();
+    void Reset(bool hardReset = false);
     //
     void InputHandler();
     //
     bool IsSnakeAlive() const { return mSnake->IsAlive(); }
+    //
+    int GetScore() const { return mScore; }
+    std::string GetRank() const { return mRank; }
 
 private:
     ECollisionType checkCollision();
@@ -35,6 +40,7 @@ private:
     void swapPositions(Position* prev, Position* next);
     void moveSnakeItem(const Position prevItemPos, const Position nextItemPos, bool isHead = false);
     void addSnakeItem(const Position newItemPos);
+    Position getRandStartSnakePos();
 
 private:
     Map* mMap;
@@ -51,7 +57,8 @@ private:
     float mUpdateCheckpointGap;
     //
     int mScore;
+    std::string mRank;
     //
-    int mScoreRow;
-    int mRankRow;
+    int mScoreRowIndex;
+    int mRankRowIndex;
 };

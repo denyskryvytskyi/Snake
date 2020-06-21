@@ -20,6 +20,7 @@ public:
     Snake();
     //
     void Init(Position headPos);
+    void Reset();
     //
     Position GetHeadPos() const { return mBody[0]; }
     EDirection GetCurrentDir() const { return mCurrentDir; }

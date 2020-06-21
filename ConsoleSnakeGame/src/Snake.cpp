@@ -12,6 +12,13 @@ void Snake::Init(Position headPos)
     mBody.push_back(headPos);
 }
 
+void Snake::Reset()
+{
+    mAlive = true;
+    mBody.clear();
+    mCurrentDir = EDirection::Up;
+}
+
 void Snake::ChangeDirection(EDirection newDir)
 {
     // if snake is only head
