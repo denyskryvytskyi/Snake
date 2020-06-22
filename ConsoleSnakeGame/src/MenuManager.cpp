@@ -1,7 +1,6 @@
 #include <windows.h>
 
 #include "MenuManager.h"
-#include "GameParams.h"
 #include "defines.h"
 
 MenuManager::MenuManager()
@@ -46,7 +45,9 @@ void MenuManager::InputHandler()
     {
         ++newChoice;
     }
-    mMenu->SetNewChoice(newChoice);
 
-
+    if (newChoice >= 0 && newChoice < mMenu->GetItemsCount())
+    {
+        mMenu->SetNewChoice(newChoice);
+    }
 }

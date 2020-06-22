@@ -22,7 +22,8 @@ void Menu::Draw()
     std::cout << "---Menu---\n";
     // Display Menu
     int i = 0;
-    for (auto menuItem : mMenuItems)
+
+    for (auto it = mMenuItems.begin(); it != mMenuItems.end() ; ++it)
     {
         if (i == mPlayerChoice)
         {
@@ -32,10 +33,9 @@ void Menu::Draw()
         {
             SetConsoleTextAttribute(hConsole, COLOR_WHITE);
         }
-        std::cout << "  -" << menuItem.second << "-\n";
+        std::cout << "  -" << it->second << "-\n";
         ++i;
     }
-
     std::cout << std::endl;
 }
 

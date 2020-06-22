@@ -19,6 +19,7 @@ public:
     void OnEnter();
     //
     EMenuState GetState() const { return mState; }
+    int GetItemsCount() const { return mMenuItems.size(); }
 
 private:
     std::unordered_map<int, std::string> mMenuItems;

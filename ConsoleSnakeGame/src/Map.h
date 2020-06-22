@@ -17,7 +17,7 @@ struct Cell
 public:
     Cell();
     Cell(char symbol, ECellState state = ECellState::Empty);
-
+    //
     char GetSymbol() const { return mSymbol; }
     void SetSymbol(char symbol) { mSymbol = symbol; }
     void SetState(ECellState state) { mState = state; }
@@ -32,7 +32,7 @@ class Map
 {
 public:
     Map();
-
+    //
     void Init(const int width, const int height);
     void Draw(const int score, std::string rank, const int scoreRow, const int rankRow);
     void Reset();

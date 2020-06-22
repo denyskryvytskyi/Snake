@@ -15,6 +15,7 @@ public:
 
     EMenuState GetMenuState() const { return mMenu->GetState(); }
 
+
 private:
     Menu* mMenu;
 };

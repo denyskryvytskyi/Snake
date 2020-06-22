@@ -29,6 +29,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Semaphore.h" />
     <ClInclude Include="src\common_types.h" />
     <ClInclude Include="src\Menu.h" />
     <ClInclude Include="src\MenuManager.h" />

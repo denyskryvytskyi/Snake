@@ -5,9 +5,16 @@
 #include "GameManager.h"
 #include "MenuManager.h"
 #include "defines.h"
+#include "Semaphore.h"
+
+Semaphore gUpdateSemaphore(1);
+Semaphore gRenderSemaphore(0);
 
 Game::Game()
-    :mState(EGameState::Menu)
+    : mState(EGameState::Menu)
+    , mRunning(false)
+    , updateThread(&Game::Update, this)
+    , renderThread(&Game::Render, this)
 {
     mMenuManager = new MenuManager();
     mGameManager = new GameManager();
@@ -23,86 +30,114 @@ Game::~Game()
     {
         delete mGameManager;
     }
+
+    updateThread.join();
+    renderThread.join();
+}
+
+void Game::Start()
+{
+    Init();
+    mRunning = true;
+    ProcessInput();
+}
+
+void Game::Stop()
+{
+    mRunning = false;
 }
 
 void Game::Init()
 {
-    // GameManager Init
     mGameManager->Init();
 }
 
 void Game::ProcessInput()
 {
-    // key handling
-    if (mState == EGameState::Menu)
+    while (mRunning)
     {
-        // call MenuManager InputHandler
-        mMenuManager->InputHandler();
-    }
-    else if (mState == EGameState::Play)
-    {
-        // call GameManager InputHandler
-        mGameManager->InputHandler();
-    }
-    else if (mState == EGameState::GameOver)
-    {
-        if (GetAsyncKeyState(KEY_ENTER))
+        // key input handling
+        if (mState == EGameState::Menu)
         {
-            mState = EGameState::BeforePlay;
+            mMenuManager->InputHandler();
+            // delay
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
-        else if (GetAsyncKeyState(KEY_BACKSPACE))
+        else if (mState == EGameState::Play)
         {
-            mState = EGameState::Menu;
+            mGameManager->InputHandler();
+        }
+        else if (mState == EGameState::GameOver)
+        {
+            if (GetAsyncKeyState(KEY_ENTER))
+            {
+                mState = EGameState::BeforePlay;
+            }
+            else if (GetAsyncKeyState(KEY_BACKSPACE))
+            {
+                mState = EGameState::Menu;
+            }
         }
     }
 }
 
 void Game::Update()
 {
-    if (mState == EGameState::Menu)
+    while (mRunning)
     {
-        EMenuState menuState = mMenuManager->GetMenuState();
-        setStateByMenuChoice(menuState);
-    }
-    else if (mState == EGameState::Play)
-    {
-        // call GameManager Update
-        mGameManager->Update();
-        if (!mGameManager->IsSnakeAlive())
+        gUpdateSemaphore.Take();
+        if (mState == EGameState::Menu)
         {
-            mState = EGameState::GameOver;
+            EMenuState menuState = mMenuManager->GetMenuState();
+            setStateByMenuChoice(menuState);
         }
-    }
-    else if (mState == EGameState::BeforePlay)
-    {
-        Reset();
-        mGameManager->OnStart();
-        mState = EGameState::Play;
+        else if (mState == EGameState::BeforePlay)
+        {
+            Reset();
+            mGameManager->OnStart();
+            mState = EGameState::Play;
+        }
+        else if (mState == EGameState::Play)
+        {
+            mGameManager->Update();
+            if (!mGameManager->IsSnakeAlive())
+            {
+                mState = EGameState::GameOver;
+            }
+        }
+        else if (mState == EGameState::Exit)
+        {
+            Stop();
+        }
+        gRenderSemaphore.Give();
     }
 }
 
 void Game::Render()
 {
-    // clean screen
-    system("cls");
+    while (mRunning)
+    {
+        gRenderSemaphore.Take();
+        // clean screen
+        system("cls");
 
-    if (mState == EGameState::Menu)
-    {
-        // call MenuManager Render
-        mMenuManager->Render();
-    }
-    else if (mState == EGameState::Play)
-    {
-        // call GameManager Render
-        mGameManager->Render();
-    }
-    else if (mState == EGameState::GameOver)
-    {
-        std::cout << "Game Over!" << std::endl;
-        std::cout << "Score: " << mGameManager->GetScore() << std::endl;
-        std::cout << "Rank: " << mGameManager->GetRank() << std::endl;
-        std::cout << "Click ENTER to restart Game." << std::endl;
-        std::cout << "Click BACKSPACE to return in Menu." << std::endl;
+        if (mState == EGameState::Menu)
+        {
+            mMenuManager->Render();
+        }
+        else if (mState == EGameState::Play)
+        {
+            mGameManager->Render();
+        }
+        else if (mState == EGameState::GameOver)
+        {
+            std::cout << "Game Over!" << std::endl;
+            std::cout << "Score: " << mGameManager->GetScore() << std::endl;
+            std::cout << "Rank: " << mGameManager->GetRank() << std::endl;
+            std::cout << "Click ENTER to restart Game." << std::endl;
+            std::cout << "Click BACKSPACE to return in Menu." << std::endl;
+        }
+        gUpdateSemaphore.Give();
     }
 }
 
