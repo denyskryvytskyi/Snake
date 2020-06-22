@@ -2,7 +2,6 @@
 
 class GameParams
 {
-
 public:
     static GameParams* GetInstance();
 
@@ -14,7 +13,7 @@ private:
 
 public:
     const int mWidth = 60;
-    const int mHeight = 20;
+    const int mHeight = 28;
 
     const float mDeltaTime = 2.0f;
 
@@ -27,7 +26,7 @@ public:
     const int mScoreRowIndex = 10;
     const int mRankRowIndex = 12;
 
-    const float mAiChangeDirTimeInterval = 5.0f;
+    const float mAiChangeDirTimeInterval = 40.0f;
 
 private:
     static GameParams* instance;

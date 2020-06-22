@@ -21,6 +21,13 @@ GameManager::GameManager()
     mSnake = new Snake();
     mMap = new Map();
     mGameParams = GameParams::GetInstance();
+    mRankNames = {
+        {2, "Green Snake"},
+        {4, "Viper"},
+        {6, "Cobra"},
+        {8, "Python"},
+        {10, "Anaconda"}
+    };
 }
 
 GameManager::~GameManager()
@@ -43,10 +50,10 @@ void GameManager::Init()
     mRankRowIndex = mGameParams->mRankRowIndex;
 }
 
-void GameManager::OnStart()
+void GameManager::OnStart(bool isDemoMode)
 {
     Position newSnakeStartPos = getRandStartSnakePos();
-    mSnake->Init(newSnakeStartPos);
+    mSnake->Init(newSnakeStartPos, isDemoMode);
     mMap->Init(mGameParams->mWidth, mGameParams->mHeight);
     // Setup snake head
     mMap->SetCell(positionToMapIndex(newSnakeStartPos), "snake_head", Cell::ECellState::Snake);
@@ -61,6 +68,7 @@ void GameManager::Update()
     }
     --mAppleGenCheckpoint;
 
+    CalcRank();
     // Map reconfig
     // Движение змейки
     // алгоритм:
@@ -74,6 +82,7 @@ void GameManager::Update()
     {
         mUpdateCheckpoint = mUpdateDt - mSpeed;
         //
+
         PositionArray* snake = mSnake->GetBody();
         PositionArray::iterator snakeIterator = snake->begin();
         // calculate head movement and collision
@@ -123,6 +132,9 @@ void GameManager::Update()
             mSpeed += mBonusSpeed;
             mScore++;
         }
+
+        mSnake->Update();
+        mInputHanlderEnable = true;
     }
     mUpdateCheckpoint -= mUpdateCheckpointGap;
 }
@@ -130,7 +142,7 @@ void GameManager::Update()
 void GameManager::Render()
 {
     // redraw cells
-    mMap->Draw(mScore, "snake", mScoreRowIndex, mRankRowIndex);
+    mMap->Draw(mScore, mRank, mScoreRowIndex, mRankRowIndex);
 }
 
 void GameManager::Reset(bool hardReset /*= false*/)
@@ -154,6 +166,9 @@ void GameManager::Reset(bool hardReset /*= false*/)
 
 void GameManager::InputHandler()
 {
+    if (!mInputHanlderEnable)
+        return;
+
     Snake::EDirection newDir = mSnake->GetCurrentDir();
     if (GetAsyncKeyState(KEY_UP) || GetAsyncKeyState(KEY_W))
     {
@@ -170,6 +185,10 @@ void GameManager::InputHandler()
     if (GetAsyncKeyState(KEY_RIGHT) || GetAsyncKeyState(KEY_D))
     {
         newDir = Snake::EDirection::Right;
+    }
+    if (newDir != mSnake->GetCurrentDir())
+    {
+        mInputHanlderEnable = false;
     }
     mSnake->ChangeDirection(newDir);
 }
@@ -254,4 +273,16 @@ Position GameManager::getRandStartSnakePos()
     Position startSnakeHeadPos(x, y);
 
     return startSnakeHeadPos;
+}
+
+void GameManager::CalcRank()
+{
+    for (auto rankName : mRankNames)
+    {
+        if (mScore <= rankName.first)
+        {
+            mRank = rankName.second;
+            return;
+        }
+    }
 }

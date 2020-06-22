@@ -91,10 +91,10 @@ void Game::Update()
             EMenuState menuState = mMenuManager->GetMenuState();
             setStateByMenuChoice(menuState);
         }
-        else if (mState == EGameState::BeforePlay)
+        else if (mState == EGameState::BeforePlay || mState == EGameState::Demo)
         {
             Reset();
-            mGameManager->OnStart();
+            mGameManager->OnStart(mState == EGameState::Demo);
             mState = EGameState::Play;
         }
         else if (mState == EGameState::Play)

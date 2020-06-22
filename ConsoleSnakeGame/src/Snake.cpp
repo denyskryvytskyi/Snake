@@ -1,4 +1,7 @@
+#include <ctime>
+
 #include "Snake.h"
+#include "GameParams.h"
 
 Snake::Snake()
     : mBody()
@@ -7,9 +10,27 @@ Snake::Snake()
 {
 }
 
-void Snake::Init(Position headPos)
+void Snake::Init(Position headPos, bool isDemoMode)
 {
     mBody.push_back(headPos);
+
+    if (isDemoMode)
+    {
+        mAi.Init();
+    }
+}
+
+void Snake::Update()
+{
+    if (mAi.IsActive())
+    {
+        mAi.Update();
+        if (mAi.IsChangeDir())
+        {
+            EDirection newDir = GenerateRandomDirection();
+            ChangeDirection(newDir);
+        }
+    }
 }
 
 void Snake::Reset()
@@ -17,6 +38,7 @@ void Snake::Reset()
     mAlive = true;
     mBody.clear();
     mCurrentDir = EDirection::Up;
+    mAi.Reset();
 }
 
 void Snake::ChangeDirection(EDirection newDir)
@@ -47,4 +69,51 @@ void Snake::ChangeDirection(EDirection newDir)
             mCurrentDir = newDir;
         break;
     }
+}
+
+AI::AI()
+    : mTimeToNextGen(0.0f)
+    , mCurrentTimeCheckpoint(0.0f)
+    , mNeedChangeDir(true)
+    , mActive(false)
+{
+}
+
+void AI::Init()
+{
+    mActive = true;
+    mTimeToNextGen = GameParams::GetInstance()->mAiChangeDirTimeInterval;
+    mCurrentTimeCheckpoint = mTimeToNextGen;
+}
+
+void AI::Update()
+{
+    if (mActive)
+    {
+        if (mCurrentTimeCheckpoint <= 0)
+        {
+            mNeedChangeDir = true;
+            mCurrentTimeCheckpoint = mTimeToNextGen;
+        }
+        --mCurrentTimeCheckpoint;
+    }
+}
+
+void AI::Reset()
+{
+    mActive = false;
+    mCurrentTimeCheckpoint = 0.0f;
+}
+
+Snake::EDirection Snake::GenerateRandomDirection()
+{
+    srand(time(0));
+
+    EDirection newRandDir = mCurrentDir;
+    while (newRandDir == mCurrentDir)
+    {
+        newRandDir = static_cast<EDirection>(rand() % 4);
+    }
+
+    return newRandDir;
 }

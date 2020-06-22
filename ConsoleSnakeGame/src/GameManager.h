@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 
 #include "Map.h"
 #include "Snake.h"
@@ -20,7 +21,7 @@ public:
     ~GameManager();
     //
     void Init();
-    void OnStart();
+    void OnStart(bool isDemoMode);
     void Update();
     void Render();
     void Reset(bool hardReset = false);
@@ -41,6 +42,7 @@ private:
     void moveSnakeItem(const Position prevItemPos, const Position nextItemPos, bool isHead = false);
     void addSnakeItem(const Position newItemPos);
     Position getRandStartSnakePos();
+    void CalcRank(); // calculate snake rank
 
 private:
     Map* mMap;
@@ -58,7 +60,10 @@ private:
     //
     int mScore;
     std::string mRank;
+    std::map<int, std::string> mRankNames;
     //
     int mScoreRowIndex;
     int mRankRowIndex;
+    //
+    bool mInputHanlderEnable = true;
 };
