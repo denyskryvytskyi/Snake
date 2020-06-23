@@ -1,5 +1,7 @@
 #pragma once
+
 #include <thread>
+
 #include "common_types.h"
 
 class GameManager;
@@ -14,6 +16,7 @@ public:
         Play,
         GameOver,
         Menu,
+        BackToMenu,
         Demo,
         Exit,
     };
@@ -33,7 +36,6 @@ public:
     void Reset();
     //
     EGameState GetCurrentState() const { return mState; }
-
     bool IsRunning() const { return mRunning; }
 
 private:
@@ -46,7 +48,7 @@ private:
     GameManager* mGameManager;
     //
     bool mRunning;
-    std::thread updateThread;
-    std::thread renderThread;
+    std::thread mUpdateThread;
+    std::thread mRenderThread;
 };
 

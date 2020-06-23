@@ -9,9 +9,9 @@ Menu::Menu()
     , mPlayerChoice(0)
 {
     mMenuItems = {
-        {0, "Play"},
-        {1, "Demo"},
-        {2, "Exit"}
+        {"Play", EMenuState::Play},
+        {"Demo", EMenuState::Demo},
+        {"Exit", EMenuState::Exit}
     };
 }
 
@@ -19,11 +19,11 @@ void Menu::Draw()
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, COLOR_WHITE);
+
     std::cout << "---Menu---\n";
     // Display Menu
     int i = 0;
-
-    for (auto it = mMenuItems.begin(); it != mMenuItems.end() ; ++it)
+    for (MenuItem item : mMenuItems)
     {
         if (i == mPlayerChoice)
         {
@@ -33,33 +33,22 @@ void Menu::Draw()
         {
             SetConsoleTextAttribute(hConsole, COLOR_WHITE);
         }
-        std::cout << "  -" << it->second << "-\n";
+        std::cout << "  -" << item.mName << "-\n";
         ++i;
     }
     std::cout << std::endl;
 }
 
-void Menu::Reset()
+void Menu::Reset(bool hardReset)
 {
-    mPlayerChoice = 0;
-    mState = EMenuState::Navigation;
+    if (hardReset)
+    {
+        mPlayerChoice = 0;
+        mState = EMenuState::Navigation;
+    }
 }
 
 void Menu::OnEnter()
 {
-    switch (mPlayerChoice)
-    {
-    case 0:
-        // start game;
-        mState = EMenuState::Play;
-        break;
-    case 1:
-        // demo mode
-        mState = EMenuState::Demo;
-        break;
-    case 2:
-        // exit game
-        mState = EMenuState::Exit;
-        break;
-    }
+    mState = mMenuItems.at(mPlayerChoice).mState;
 }

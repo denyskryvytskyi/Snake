@@ -5,13 +5,28 @@
 
 #include "common_types.h"
 
+struct MenuItem
+{
+    friend class Menu;
+    
+public:
+    MenuItem(std::string name, EMenuState state)
+        : mName(name)
+        , mState(state)
+    {}
+
+private:
+    std::string mName;
+    EMenuState mState;
+};
+
 class Menu
 {
 public:
     Menu();
 
     void Draw();
-    void Reset();
+    void Reset(bool hardReset);
     //
     int GetCurrentChoice() const { return mPlayerChoice; }
     void SetNewChoice(const int choice) { mPlayerChoice = choice; }
@@ -22,7 +37,7 @@ public:
     int GetItemsCount() const { return mMenuItems.size(); }
 
 private:
-    std::unordered_map<int, std::string> mMenuItems;
+    std::vector<MenuItem> mMenuItems;
 
     EMenuState mState;
     int mPlayerChoice;

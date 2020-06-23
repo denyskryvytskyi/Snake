@@ -8,6 +8,7 @@ bool ShowConsoleCursor(bool show);
 
 int main()
 {
+    // hide cursor
     ShowConsoleCursor(false);
 
     Game game;

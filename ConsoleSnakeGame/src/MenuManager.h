@@ -9,7 +9,7 @@ public:
     ~MenuManager();
 
     void Render();
-    void Reset();
+    void Reset(bool hardReset = false);
 
     void InputHandler();
 

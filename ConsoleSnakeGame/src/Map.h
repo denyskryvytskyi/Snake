@@ -19,8 +19,6 @@ public:
     Cell(char symbol, ECellState state = ECellState::Empty);
     //
     char GetSymbol() const { return mSymbol; }
-    void SetSymbol(char symbol) { mSymbol = symbol; }
-    void SetState(ECellState state) { mState = state; }
     ECellState GetState() const { return mState; }
 
 private:
@@ -46,7 +44,7 @@ private:
 private:
     int mWidth;
     int mHeight;
-
+    //
     std::unordered_map<std::string, char> mCellSymbolNames;
     std::vector<Cell> mCells;
 };

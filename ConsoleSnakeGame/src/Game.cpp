@@ -13,8 +13,8 @@ Semaphore gRenderSemaphore(0);
 Game::Game()
     : mState(EGameState::Menu)
     , mRunning(false)
-    , updateThread(&Game::Update, this)
-    , renderThread(&Game::Render, this)
+    , mUpdateThread(&Game::Update, this)
+    , mRenderThread(&Game::Render, this)
 {
     mMenuManager = new MenuManager();
     mGameManager = new GameManager();
@@ -22,6 +22,10 @@ Game::Game()
 
 Game::~Game()
 {
+    // wait when the threads execution has completed
+    mUpdateThread.join();
+    mRenderThread.join();
+
     if (mMenuManager != nullptr)
     {
         delete mMenuManager;
@@ -30,15 +34,17 @@ Game::~Game()
     {
         delete mGameManager;
     }
-
-    updateThread.join();
-    renderThread.join();
 }
 
 void Game::Start()
 {
+    // initialize all subsystems on game start
     Init();
+
+    // now threads can be do the work
     mRunning = true;
+
+    // input handling in the main thread
     ProcessInput();
 }
 
@@ -56,7 +62,6 @@ void Game::ProcessInput()
 {
     while (mRunning)
     {
-        // key input handling
         if (mState == EGameState::Menu)
         {
             mMenuManager->InputHandler();
@@ -75,7 +80,7 @@ void Game::ProcessInput()
             }
             else if (GetAsyncKeyState(KEY_BACKSPACE))
             {
-                mState = EGameState::Menu;
+                mState = EGameState::BackToMenu;
             }
         }
     }
@@ -85,16 +90,21 @@ void Game::Update()
 {
     while (mRunning)
     {
+        // use semaphore to make synchronization with render thread
         gUpdateSemaphore.Take();
         if (mState == EGameState::Menu)
         {
             EMenuState menuState = mMenuManager->GetMenuState();
+            // if menu state isn't "Navigation", then change game state
             setStateByMenuChoice(menuState);
         }
         else if (mState == EGameState::BeforePlay || mState == EGameState::Demo)
         {
+            // Reset if it's not a first game in session
             Reset();
-            mGameManager->OnStart(mState == EGameState::Demo);
+
+            // Before game initializations
+            mGameManager->OnStart(mState == EGameState::Demo || mMenuManager->GetMenuState() == EMenuState::Demo);
             mState = EGameState::Play;
         }
         else if (mState == EGameState::Play)
@@ -105,10 +115,16 @@ void Game::Update()
                 mState = EGameState::GameOver;
             }
         }
+        else if (mState == EGameState::BackToMenu)
+        {
+            mMenuManager->Reset(true);
+            mState = EGameState::Menu;
+        }
         else if (mState == EGameState::Exit)
         {
             Stop();
         }
+        // notify render thread to continue execution
         gRenderSemaphore.Give();
     }
 }
@@ -117,7 +133,9 @@ void Game::Render()
 {
     while (mRunning)
     {
+        // use semaphore to make synchronization with update thread
         gRenderSemaphore.Take();
+
         // clean screen
         system("cls");
 
@@ -131,12 +149,14 @@ void Game::Render()
         }
         else if (mState == EGameState::GameOver)
         {
+            // simple menu after game
             std::cout << "Game Over!" << std::endl;
             std::cout << "Score: " << mGameManager->GetScore() << std::endl;
             std::cout << "Rank: " << mGameManager->GetRank() << std::endl;
             std::cout << "Click ENTER to restart Game." << std::endl;
             std::cout << "Click BACKSPACE to return in Menu." << std::endl;
         }
+        // notify update thread to continue execution
         gUpdateSemaphore.Give();
     }
 }

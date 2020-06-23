@@ -3,7 +3,6 @@
 #include<mutex>
 #include<condition_variable>
 
-
 class Semaphore
 {
 public:
@@ -40,4 +39,3 @@ private:
     std::mutex mMutex;
     std::condition_variable mCv;
 };
-

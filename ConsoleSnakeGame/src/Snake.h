@@ -5,6 +5,9 @@
 
 #include "Position.h"
 
+/*
+* Component for the demo mode
+*/
 class AI
 {
 public:
@@ -12,13 +15,14 @@ public:
     //
     void Init();
     void Update();
-    void Reset();
+    void Reset(bool hardReset = true);
     //
     bool IsActive() const { return mActive; }
     bool IsChangeDir() const { return mNeedChangeDir; }
+    //
 
 private:
-    float mTimeToNextGen;
+    float mTimeToNextDirChange;
     float mCurrentTimeCheckpoint;
     bool mNeedChangeDir;
     bool mActive;
@@ -46,7 +50,9 @@ public:
     EDirection GetCurrentDir() const { return mCurrentDir; }
     PositionArrayPtr GetBody() { return &mBody; }
     void SetAlive(const bool alive) { mAlive = alive; }
+    float GetSpeed() const { return mSpeed; }
     //
+    void IncreaseSpeed(const float increaseSpeed) { mSpeed += increaseSpeed; }
     void ChangeDirection(EDirection newDir);
     //
     bool IsAlive() const { return mAlive; }
@@ -54,7 +60,8 @@ public:
     EDirection GenerateRandomDirection();
 
 private:
-    PositionArray mBody; // indices of Map cells with state ECellState_Snake
+    PositionArray mBody;    // indices of Map cells with state ECellState_Snake
+    float mSpeed;           // current speed
     EDirection mCurrentDir; // direction of movement
     bool mAlive;
     //

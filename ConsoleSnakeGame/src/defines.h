@@ -1,7 +1,6 @@
 #pragma once
 
 // Virtual Keys Codes
-
 #define KEY_ENTER 0x0D
 #define KEY_BACKSPACE 0x08
 
@@ -15,5 +14,6 @@
 #define KEY_S 0x53
 #define KEY_W 0x57
 
+// Colors codes
 #define COLOR_GREEN 10
 #define COLOR_WHITE 15

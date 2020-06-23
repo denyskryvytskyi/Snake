@@ -21,9 +21,9 @@ void MenuManager::Render()
     mMenu->Draw();
 }
 
-void MenuManager::Reset()
+void MenuManager::Reset(bool hardReset /* = false*/)
 {
-    mMenu->Reset();
+    mMenu->Reset(hardReset);
 }
 
 void MenuManager::InputHandler()

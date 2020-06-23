@@ -1,5 +1,4 @@
 #include <ctime>
-#include <conio.h>
 #include <windows.h>
 
 #include "GameManager.h"
@@ -7,22 +6,21 @@
 #include "defines.h"
 
 GameManager::GameManager()
-    : mAppleGenCheckpoint()
-    , mSpeed()
-    , mBonusSpeed()
-    , mUpdateDt()
-    , mUpdateCheckpoint()
-    , mUpdateCheckpointGap()
-    , mScore()
+    : mAppleGenCheckpoint(0.0f)
+    , mBonusSpeed(0.0f)
+    , mTimer()
+    , mScore(0)
     , mRank()
-    , mScoreRowIndex()
-    , mRankRowIndex()
+    , mScoreRowIndex(0)
+    , mRankRowIndex(0)
+    , mInputHanlderEnable(true)
 {
     mSnake = new Snake();
     mMap = new Map();
     mGameParams = GameParams::GetInstance();
+
     mRankNames = {
-        {2, "Green Snake"},
+        {2, "Worm"},
         {4, "Viper"},
         {6, "Cobra"},
         {8, "Python"},
@@ -45,6 +43,7 @@ GameManager::~GameManager()
 void GameManager::Init()
 {
     Reset();
+    mTimer.Init();
 
     mScoreRowIndex = mGameParams->mScoreRowIndex;
     mRankRowIndex = mGameParams->mRankRowIndex;
@@ -61,6 +60,7 @@ void GameManager::OnStart(bool isDemoMode)
 
 void GameManager::Update()
 {
+    // generate apple after timout
     if (mAppleGenCheckpoint <= 0)
     {
         mAppleGenCheckpoint = mGameParams->mAppleGenerateTimeInterval;
@@ -68,24 +68,23 @@ void GameManager::Update()
     }
     --mAppleGenCheckpoint;
 
-    CalcRank();
-    // Map reconfig
-    // Движение змейки
-    // алгоритм:
-    /*
-    1. Смотрим на направление змейки
-    2. Проходим циклом по Snake's mBody и делаем +-1 * deltaTime для головы
-    3. Затем для каждого элемента тела: передвигаем на осободившуюся ячейку
-    4. Подумать как лучше обрабатывать deltatime
-    */
-    if (mUpdateCheckpoint <= 0)
-    {
-        mUpdateCheckpoint = mUpdateDt - mSpeed;
-        //
+    // calculate current snake rank
+    calcRank();
 
+    /*
+    * Map update
+    * 1. Check if is it time to update snake movement
+    * 2. Check snake direction
+    * 3. Move all snake's body items
+    * 4. Check collision
+    */
+    if (mTimer.IsOver())
+    {
+        // snake movement update timer takes into account snake speed
+        mTimer.Restart(mSnake->GetSpeed());
+        //
         PositionArray* snake = mSnake->GetBody();
         PositionArray::iterator snakeIterator = snake->begin();
-        // calculate head movement and collision
         Position prevItemPos = (*snakeIterator);
         Position headMoveOffset(0, 0);
         switch (mSnake->GetCurrentDir())
@@ -103,40 +102,43 @@ void GameManager::Update()
             headMoveOffset = Position(1, 0);
             break;
         }
+        // Move snake head
         (*snakeIterator) += headMoveOffset;
-        // Проверка коллизии (стена и яблоко)
-        // если тип коллизии - wall - ставим isAlive = false;
-        // если тип коллизии - яблоко - нужно добавить в конец еще одно тело
+        // Check collision of snake head with wall or apple
         ECollisionType collision = checkCollision();
         if (collision == ECollisionType::Wall || collision == ECollisionType::Snake)
         {
             mSnake->SetAlive(false);
-            return; // так как дальше стена - нам не нужно делать дальнейшие вычисления
+            // no further calculations needed
+            return;
         }
+        // update snake head cell on the map
         moveSnakeItem(prevItemPos, (*snakeIterator), true);
 
-        // move snake body
-        // алгоритм движения: перемещаем каждый следующий элемент тела на позицию передвинутого
+        // snake body movement
         ++snakeIterator;
         for (; snakeIterator != snake->end(); ++snakeIterator)
         {
+            // swap positions of current item and previously moved
             swapPositions(&(*snakeIterator), &prevItemPos);
+            // update snake body item cell on the map
             moveSnakeItem(prevItemPos, (*snakeIterator));
         }
 
+        // if an apple was eaten
         if (collision == ECollisionType::Apple)
         {
-            // add one more body item
             snake->push_back(prevItemPos);
             addSnakeItem(prevItemPos);
-            mSpeed += mBonusSpeed;
+            mSnake->IncreaseSpeed(mBonusSpeed);
             mScore++;
         }
 
         mSnake->Update();
+        // enable input handling
         mInputHanlderEnable = true;
     }
-    mUpdateCheckpoint -= mUpdateCheckpointGap;
+    mTimer.OnTick();
 }
 
 void GameManager::Render()
@@ -147,18 +149,14 @@ void GameManager::Render()
 
 void GameManager::Reset(bool hardReset /*= false*/)
 {
-    mUpdateDt = mGameParams->mSnakeMoveUpdateDt;
-    mUpdateCheckpointGap = mGameParams->mSnakeMoveUpdateGap;
     mBonusSpeed = mGameParams->mSnakeBonusSpeed;
     mAppleGenCheckpoint = mGameParams->mAppleGenerateTimeInterval;
-    mUpdateCheckpoint = mUpdateDt;
 
     if (hardReset)
     {
         mMap->Reset();
         mSnake->Reset();
 
-        mSpeed = 0.0f;
         mScore = 0;
         mRank = "";
     }
@@ -169,7 +167,8 @@ void GameManager::InputHandler()
     if (!mInputHanlderEnable)
         return;
 
-    Snake::EDirection newDir = mSnake->GetCurrentDir();
+    Snake::EDirection currentDir = mSnake->GetCurrentDir();
+    Snake::EDirection newDir = currentDir;
     if (GetAsyncKeyState(KEY_UP) || GetAsyncKeyState(KEY_W))
     {
         newDir = Snake::EDirection::Up;
@@ -186,17 +185,18 @@ void GameManager::InputHandler()
     {
         newDir = Snake::EDirection::Right;
     }
-    if (newDir != mSnake->GetCurrentDir())
+    if (newDir != currentDir)
     {
+        mSnake->ChangeDirection(newDir);
+
+        // if direction was changed - disable input handling until update will be done
         mInputHanlderEnable = false;
     }
-    mSnake->ChangeDirection(newDir);
 }
 
 GameManager::ECollisionType GameManager::checkCollision()
 {
-    // проверяем состояние следующей ячейки на карте
-    // если state == apple || state == wall
+    // get state of the next map cell (new snake head position)
     Cell::ECellState state = mMap->GetCellState(positionToMapIndex(mSnake->GetHeadPos()));
 
     if (state == Cell::ECellState::Apple)
@@ -215,6 +215,7 @@ GameManager::ECollisionType GameManager::checkCollision()
     return ECollisionType::None;
 }
 
+// Convert (x;y) position of snake body item to map cell format
 int GameManager::positionToMapIndex(const Position& pos) const
 {
     return mGameParams->mWidth * pos.GetY() + pos.GetX();
@@ -223,7 +224,7 @@ int GameManager::positionToMapIndex(const Position& pos) const
 void GameManager::generateApple()
 {
     srand(time(0));
-    // generate apple on map
+    // try generate apple position on map
     while (true)
     {
         int applePosX = rand() % (mGameParams->mWidth - 2) + 1;
@@ -263,6 +264,7 @@ void GameManager::addSnakeItem(const Position newItemPos)
     mMap->SetCell(positionToMapIndex(newItemPos), "snake_body", Cell::ECellState::Snake);
 }
 
+// Generate random position of snake head on the map
 Position GameManager::getRandStartSnakePos()
 {
     int width = mGameParams->mWidth;
@@ -275,7 +277,7 @@ Position GameManager::getRandStartSnakePos()
     return startSnakeHeadPos;
 }
 
-void GameManager::CalcRank()
+void GameManager::calcRank()
 {
     for (auto rankName : mRankNames)
     {
@@ -285,4 +287,25 @@ void GameManager::CalcRank()
             return;
         }
     }
+}
+
+Timer::Timer()
+    : mDt(0.0f)
+    , mCheckpoint(0.0f)
+    , mCheckpointGap(0.0f)
+{
+}
+
+void Timer::Init()
+{
+    GameParams* gameParams = GameParams::GetInstance();
+    mDt = gameParams->mSnakeMoveUpdateDt;
+    mCheckpointGap = gameParams->mSnakeMoveUpdateGap;
+
+    Restart();
+}
+
+void Timer::Restart(int bonusTime /* =0*/)
+{
+    mCheckpoint = mDt - bonusTime;
 }

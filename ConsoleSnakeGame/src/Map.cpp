@@ -37,17 +37,17 @@ void Map::Draw(const int score, std::string rank, const int scoreRow, const int 
     {
         if (i >= mWidth)
         {
-            // score calculations
             ++j;
             if (j == scoreRow)
             {
+                // draw score
                 map += scoreStr;
             }
             else if (j == rankRow)
             {
+                // draw rank
                 map += rankStr;
             }
-            // continue map calc
             map += "\n";
             i = 0;
         }
@@ -74,26 +74,15 @@ void Map::SetCell(const int index, const std::string symbolName, const Cell::ECe
 
 void Map::setupWalls()
 {
-    // set walls
-    /*
-    #########################
-    #                       #
-    #                       #
-    #                       #
-    #                       #
-    #                       #
-    #                       #
-    #                       #
-    #                       #
-    #########################
-    */
-    char symbol = mCellSymbolNames.find("wall")->second;
+    const char symbol = mCellSymbolNames.find("wall")->second;
     Cell::ECellState state = Cell::ECellState::Wall;
     Cell cell(symbol, state);
-    bool isSolidRow = false;
-    // 1. Вынести сетап стен в отдельную функцию
-    // 2. Все настройки делаем в двойном цикле. Если индекс внешнего цикла == 0 или == height - 1, то все ячейки строки- стена,
-    // иначе - для j == 0 и j == width - 1 ставим wall, а для остальных - empty.
+    bool isSolidRow = false; // all symbols in the row - wall symbols
+    /*
+    * Configure walls on the map
+    * 1. for the first and the last rows - all symbols are wall symbols
+    * 2. for other - only first and the last symbols in row are wall symbols
+    */
     for (int i = 0; i < mHeight; i++, isSolidRow = false)
     {
         // first and last rows
@@ -101,7 +90,7 @@ void Map::setupWalls()
         {
             isSolidRow = true;
         }
-        // middle rows
+
         for (int j = 0; j < mWidth; j++)
         {
             if (isSolidRow || j == 0 || j == mWidth - 1)
@@ -127,4 +116,3 @@ Cell::Cell(char symbol, ECellState state)
     , mState(state)
 {
 }
-
