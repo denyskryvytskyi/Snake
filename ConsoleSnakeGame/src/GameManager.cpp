@@ -6,7 +6,6 @@
 #include "defines.h"
 
 GameManager::GameManager()
-    //: mAppleGenCheckpoint(0.0f)
     : mBonusSpeed(0.0f)
     , mSpeedTimer()
     , mAppleGenerationTimer()
@@ -62,8 +61,14 @@ void GameManager::OnStart(bool isDemoMode)
     Position newSnakeStartPos = getRandStartSnakePos();
     mSnake->Init(newSnakeStartPos, mDemoMode);
     mMap->Init(gameParams.mWidth, gameParams.mHeight);
-    // Setup snake head
+    // setup snake head
     mMap->SetCell(positionToMapIndex(newSnakeStartPos), "snake_head", Cell::ECellState::Snake);
+    // generate forst apple
+    generateApple(); 
+    if (mDemoMode)
+    {
+        SetSnakeDemoMode();
+    }
 }
 
 void GameManager::Update(float dt)
@@ -75,11 +80,9 @@ void GameManager::Update(float dt)
     if (mAppleGenerationTimer.IsOver())
     {
         mAppleGenerationTimer.Restart();
-        //mAppleGenCheckpoint = GameParams::instance().mAppleGenerateTimeInterval;
         generateApple();
     }
     mAppleGenerationTimer.OnTick(dt);
-    //--mAppleGenCheckpoint;
 
     /*
     * Map update
@@ -99,16 +102,16 @@ void GameManager::Update(float dt)
         Position headMoveOffset(0, 0);
         switch (mSnake->GetCurrentDir())
         {
-        case Snake::EDirection::Up:
+        case ESnakeDirection::Up:
             headMoveOffset = Position(0, -1);
             break;
-        case Snake::EDirection::Down:
+        case ESnakeDirection::Down:
             headMoveOffset = Position(0, 1);
             break;
-        case Snake::EDirection::Left:
+        case ESnakeDirection::Left:
             headMoveOffset = Position(-1, 0);
             break;
-        case Snake::EDirection::Right:
+        case ESnakeDirection::Right:
             headMoveOffset = Position(1, 0);
             break;
         }
@@ -142,6 +145,11 @@ void GameManager::Update(float dt)
             addSnakeItem(prevItemPos);
             mSnake->IncreaseSpeed(mBonusSpeed);
             mScore++;
+            // find new apple for ai mode
+            if (mDemoMode)
+            {
+                SetSnakeDemoMode();
+            }
         }
 
         mSnake->Update();
@@ -162,7 +170,6 @@ void GameManager::Reset(bool hardReset /*= false*/)
     GameParams gameParams = GameParams::instance();
 
     mBonusSpeed = gameParams.mSnakeBonusSpeed;
-  /*  mAppleGenCheckpoint = gameParams.mAppleGenerateTimeInterval;*/
 
     if (hardReset)
     {
@@ -179,23 +186,23 @@ void GameManager::InputHandler()
     if (!mInputHanlderEnable || mDemoMode)
         return;
 
-    Snake::EDirection currentDir = mSnake->GetCurrentDir();
-    Snake::EDirection newDir = currentDir;
+    ESnakeDirection currentDir = mSnake->GetCurrentDir();
+    ESnakeDirection newDir = currentDir;
     if (GetAsyncKeyState(KEY_UP) || GetAsyncKeyState(KEY_W))
     {
-        newDir = Snake::EDirection::Up;
+        newDir = ESnakeDirection::Up;
     }
     if (GetAsyncKeyState(KEY_DOWN) || GetAsyncKeyState(KEY_S))
     {
-        newDir = Snake::EDirection::Down;
+        newDir = ESnakeDirection::Down;
     }
     if (GetAsyncKeyState(KEY_LEFT) || GetAsyncKeyState(KEY_A))
     {
-        newDir = Snake::EDirection::Left;
+        newDir = ESnakeDirection::Left;
     }
     if (GetAsyncKeyState(KEY_RIGHT) || GetAsyncKeyState(KEY_D))
     {
-        newDir = Snake::EDirection::Right;
+        newDir = ESnakeDirection::Right;
     }
     if (newDir != currentDir)
     {
@@ -243,7 +250,10 @@ void GameManager::generateApple()
         int applePosX = rand() % (gameParams.mWidth - 2) + 1;
         int applePosY = rand() % (gameParams.mHeight - 2) + 1;
 
-        int appleIndex = positionToMapIndex(Position(applePosX, applePosY));
+        Position applePos = Position(applePosX, applePosY);
+        mApplesPos.push_back(applePos);
+
+        int appleIndex = positionToMapIndex(applePos);
 
         if (mMap->GetCellState(appleIndex) == Cell::ECellState::Empty)
         {
@@ -303,6 +313,15 @@ void GameManager::calcRank()
     }
 }
 
+void GameManager::SetSnakeDemoMode()
+{
+    // get last generated apple
+    auto it = mApplesPos.end() - 1;
+    // send apple pos to snake AI
+    mSnake->SetAIApplePos(*it);
+    mApplesPos.erase(it);
+}
+
 SnakeTimer::SnakeTimer()
     : mWaitTime(0.0f)
     , mCurrentTime(0.0f)
@@ -311,9 +330,7 @@ SnakeTimer::SnakeTimer()
 
 void SnakeTimer::Init(float waitTime)
 {
-    //GameParams gameParams = GameParams::instance();
     mWaitTime = waitTime;
-
     Restart();
 }
 

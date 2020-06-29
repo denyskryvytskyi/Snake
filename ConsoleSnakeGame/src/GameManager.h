@@ -65,12 +65,13 @@ private:
     int positionToMapIndex(const Position& pos) const;
     //
     void calcRank(); // calculate snake rank
+    //
+    void SetSnakeDemoMode();
 
 private:
     Map* mMap;
     Snake* mSnake;
     //
-    //float mAppleGenCheckpoint;
     float mBonusSpeed; // bonus snake speed for the eaten apple
     SnakeTimer mSpeedTimer;
     SnakeTimer mAppleGenerationTimer;
@@ -85,4 +86,6 @@ private:
     bool mInputHanlderEnable;
     //
     bool mDemoMode;
+    //
+    std::vector<Position> mApplesPos; // container of apples positins for Demo Mode;
 };

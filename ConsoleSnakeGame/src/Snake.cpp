@@ -6,7 +6,7 @@
 Snake::Snake()
     : mBody()
     , mSpeed(0.0f)
-    , mCurrentDir(EDirection::Up)
+    , mCurrentDir(ESnakeDirection::Up)
     , mAlive(true)
 {
 }
@@ -26,13 +26,7 @@ void Snake::Update()
     // if demo mode is active
     if (mAi.IsActive())
     {
-        mAi.Update();
-        if (mAi.IsChangeDir())
-        {
-            EDirection newDir = GenerateRandomDirection();
-            ChangeDirection(newDir);
-            mAi.Reset(false);
-        }
+        mCurrentDir = mAi.GenerateDirection(mBody[0], mCurrentDir);
     }
 }
 
@@ -41,11 +35,11 @@ void Snake::Reset()
     mAlive = true;
     mBody.clear();
     mSpeed = 0.0f;
-    mCurrentDir = EDirection::Up;
+    mCurrentDir = ESnakeDirection::Up;
     mAi.Reset();
 }
 
-void Snake::ChangeDirection(EDirection newDir)
+void Snake::ChangeDirection(ESnakeDirection newDir)
 {
     // if snake is only the head
     if (mBody.size() == 1)
@@ -56,73 +50,75 @@ void Snake::ChangeDirection(EDirection newDir)
 
     switch (newDir)
     {
-    case EDirection::Up:
-        if (mCurrentDir != EDirection::Down)
+    case ESnakeDirection::Up:
+        if (mCurrentDir != ESnakeDirection::Down)
             mCurrentDir = newDir;
         break;
-    case EDirection::Down:
-        if (mCurrentDir != EDirection::Up)
+    case ESnakeDirection::Down:
+        if (mCurrentDir != ESnakeDirection::Up)
             mCurrentDir = newDir;
         break;
-    case EDirection::Left:
-        if (mCurrentDir != EDirection::Right)
+    case ESnakeDirection::Left:
+        if (mCurrentDir != ESnakeDirection::Right)
             mCurrentDir = newDir;
         break;
-    case EDirection::Right:
-        if (mCurrentDir != EDirection::Left)
+    case ESnakeDirection::Right:
+        if (mCurrentDir != ESnakeDirection::Left)
             mCurrentDir = newDir;
         break;
     }
 }
 
 AI::AI()
-    : mTimeToNextDirChange(0.0f)
-    , mCurrentTimeCheckpoint(0.0f)
-    , mNeedChangeDir(true)
-    , mActive(false)
+    : mActive(false)
+    , mApplePos()
 {
 }
 
 void AI::Init()
 {
     mActive = true;
-    mTimeToNextDirChange = GameParams::instance().mAiChangeDirTimeInterval;
-    mCurrentTimeCheckpoint = mTimeToNextDirChange;
 }
 
-void AI::Update()
+void AI::Reset()
 {
-    if (mActive)
-    {
-        if (mCurrentTimeCheckpoint <= 0)
-        {
-            mNeedChangeDir = true;
-            mCurrentTimeCheckpoint = mTimeToNextDirChange;
-        }
-        --mCurrentTimeCheckpoint;
-    }
+    mActive = false;
 }
 
-void AI::Reset(bool hardReset /*= true*/)
+void AI::SetApplePos(const Position& applePos)
 {
-    mNeedChangeDir = false;
-
-    if (hardReset)
-    {
-        mActive = false;
-        mCurrentTimeCheckpoint = 0.0f;
-    }
+    mApplePos = applePos;
 }
 
-Snake::EDirection Snake::GenerateRandomDirection()
+ESnakeDirection AI::GenerateDirection(Position snakeHeadPos, ESnakeDirection currentDir)
 {
-    srand(time(0));
+    int snakeX = snakeHeadPos.GetX();
+    int snakeY = snakeHeadPos.GetY();
 
-    EDirection newRandDir = mCurrentDir;
-    while (newRandDir == mCurrentDir)
+    int appleX = mApplePos.GetX();
+    int appleY = mApplePos.GetY();
+
+    if (snakeX > appleX && currentDir != ESnakeDirection::Right)
     {
-        newRandDir = static_cast<EDirection>(rand() % 4);
+        return ESnakeDirection::Left;
+    }
+    if (snakeX < appleX && currentDir != ESnakeDirection::Left)
+    {
+        return ESnakeDirection::Right /*: ESnakeDirection::Down*/;
+    }
+    if (snakeY > appleY && currentDir != ESnakeDirection::Down)
+    {
+        return ESnakeDirection::Up;
+    }
+    if (snakeY < appleY && currentDir != ESnakeDirection::Up)
+    {
+        return ESnakeDirection::Down;
     }
 
-    return newRandDir;
+    return currentDir;
+}
+
+void Snake::SetAIApplePos(const Position& applePos)
+{
+    mAi.SetApplePos(applePos);
 }

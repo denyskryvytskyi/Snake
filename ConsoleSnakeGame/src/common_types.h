@@ -7,3 +7,11 @@ enum class EMenuState
     Demo,
     Exit
 };
+
+enum class ESnakeDirection
+{
+    Up,
+    Down,
+    Left,
+    Right,
+};

@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 
+#include "common_types.h"
 #include "Position.h"
 
 /*
@@ -14,32 +15,20 @@ public:
     AI();
     //
     void Init();
-    void Update();
-    void Reset(bool hardReset = true);
+    void Reset();
     //
     bool IsActive() const { return mActive; }
-    bool IsChangeDir() const { return mNeedChangeDir; }
     //
+    void SetApplePos(const Position& applePos);
+    ESnakeDirection GenerateDirection(Position snakeHeadPos, ESnakeDirection currentDir);
 
 private:
-    float mTimeToNextDirChange;
-    float mCurrentTimeCheckpoint;
-    //
-    bool mNeedChangeDir;
     bool mActive;
+    Position mApplePos;
 };
 
 class Snake
 {
-public:
-    enum class EDirection
-    {
-        Up,
-        Down,
-        Left,
-        Right,
-    };
-
 public:
     Snake();
     //
@@ -48,22 +37,22 @@ public:
     void Reset();
     //
     Position GetHeadPos() const { return mBody[0]; }
-    EDirection GetCurrentDir() const { return mCurrentDir; }
+    ESnakeDirection GetCurrentDir() const { return mCurrentDir; }
     PositionArrayPtr GetBody() { return &mBody; }
     void SetAlive(const bool alive) { mAlive = alive; }
     float GetSpeed() const { return mSpeed; }
     //
     void IncreaseSpeed(const float increaseSpeed) { mSpeed += increaseSpeed; }
-    void ChangeDirection(EDirection newDir);
+    void ChangeDirection(ESnakeDirection newDir);
     //
     bool IsAlive() const { return mAlive; }
     //
-    EDirection GenerateRandomDirection();
+    void SetAIApplePos(const Position& applePos);
 
 private:
     PositionArray mBody;    // indices of Map cells with state ECellState_Snake
     float mSpeed;           // current speed
-    EDirection mCurrentDir; // direction of movement
+    ESnakeDirection mCurrentDir; // direction of movement
     bool mAlive;
     //
     AI mAi; // for the demo mode
