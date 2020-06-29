@@ -88,8 +88,13 @@ void Game::ProcessInput()
 
 void Game::Update()
 {
+    mTimer.reset();
+    float elapsedTime;
     while (mRunning)
     {
+        // get deltatime as seconds
+        elapsedTime = mTimer.elapsed();
+        mTimer.reset();
         if (mState == EGameState::Menu)
         {
             // use semaphore to make synchronization with render thread
@@ -114,7 +119,7 @@ void Game::Update()
         {
             // use semaphore to make synchronization with render thread
             gUpdateSemaphore.Take();
-            mGameManager->Update();
+            mGameManager->Update(elapsedTime);
             // notify render thread to continue execution
             gRenderSemaphore.Give();
 
@@ -132,6 +137,7 @@ void Game::Update()
         {
             Stop();
         }
+        /*mTimer.reset();*/
     }
 }
 

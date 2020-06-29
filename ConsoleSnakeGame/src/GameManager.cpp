@@ -8,7 +8,7 @@
 GameManager::GameManager()
     : mAppleGenCheckpoint(0.0f)
     , mBonusSpeed(0.0f)
-    , mTimer()
+    , mSpeedTimer()
     , mScore(0)
     , mRank()
     , mScoreRowIndex(0)
@@ -43,7 +43,7 @@ GameManager::~GameManager()
 void GameManager::Init()
 {
     Reset();
-    mTimer.Init();
+    mSpeedTimer.Init();
 
     GameParams gameParams = GameParams::instance();
     mScoreRowIndex = gameParams.mScoreRowIndex;
@@ -62,7 +62,7 @@ void GameManager::OnStart(bool isDemoMode)
     mMap->SetCell(positionToMapIndex(newSnakeStartPos), "snake_head", Cell::ECellState::Snake);
 }
 
-void GameManager::Update()
+void GameManager::Update(float dt)
 {
     // calculate current snake rank
     calcRank();
@@ -82,10 +82,10 @@ void GameManager::Update()
     * 3. Move all snake's body items
     * 4. Check collision
     */
-    if (mTimer.IsOver())
+    if (mSpeedTimer.IsOver())
     {
         // snake movement update timer takes into account snake speed
-        mTimer.Restart(mSnake->GetSpeed());
+        mSpeedTimer.Restart(mSnake->GetSpeed());
         //
         PositionArray* snake = mSnake->GetBody();
         PositionArray::iterator snakeIterator = snake->begin();
@@ -142,7 +142,7 @@ void GameManager::Update()
         // enable input handling
         mInputHanlderEnable = true;
     }
-    mTimer.OnTick();
+    mSpeedTimer.OnTick(dt);
 }
 
 void GameManager::Render()
@@ -297,23 +297,21 @@ void GameManager::calcRank()
     }
 }
 
-Timer::Timer()
-    : mDt(0.0f)
-    , mCheckpoint(0.0f)
-    , mCheckpointGap(0.0f)
+SpeedTimer::SpeedTimer()
+    : mWaitTime(0.0f)
+    , mCurrentTime(0.0f)
 {
 }
 
-void Timer::Init()
+void SpeedTimer::Init()
 {
     GameParams gameParams = GameParams::instance();
-    mDt = gameParams.mSnakeMoveUpdateDt;
-    mCheckpointGap = gameParams.mSnakeMoveUpdateGap;
+    mWaitTime = gameParams.mSnakeMoveUpdateWaitTime;
 
     Restart();
 }
 
-void Timer::Restart(int bonusTime /* =0*/)
+void SpeedTimer::Restart(float bonusTime /* =0.0f*/)
 {
-    mCheckpoint = mDt - bonusTime;
+    mCurrentTime = mWaitTime - bonusTime;
 }

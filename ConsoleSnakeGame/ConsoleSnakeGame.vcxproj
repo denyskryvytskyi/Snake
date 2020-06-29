@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\GameParams.cpp" />
     <ClCompile Include="src\Menu.cpp" />
     <ClCompile Include="src\MenuManager.cpp" />
     <ClCompile Include="src\GameManager.cpp" />
@@ -40,6 +39,7 @@
     <ClInclude Include="src\Snake.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\Map.h" />
+    <ClInclude Include="src\Timer.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

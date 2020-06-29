@@ -11,20 +11,19 @@ class GameParams;
 /*
 * Timer class needed to implement snake speed
 */
-class Timer
+class SpeedTimer
 {
 public:
-    Timer();
+    SpeedTimer();
 
     void Init();
-    bool IsOver() const { return mCheckpoint <= 0; }
-    void OnTick() { mCheckpoint -= mCheckpointGap; };
-    void Restart(int bonusTime = 0);
+    bool IsOver() const { return mCurrentTime <= 0.0f; }
+    void OnTick(float dt) { mCurrentTime -= dt; };
+    void Restart(float bonusTime = 0.0f);
 
 private:
-    float mDt;              // update time
-    float mCheckpoint;      // current update time
-    float mCheckpointGap;   // gap until time is over
+    float mWaitTime; // wait time
+    float mCurrentTime; // current time
 };
 
 class GameManager
@@ -43,7 +42,7 @@ public:
     //
     void Init();
     void OnStart(bool isDemoMode);
-    void Update();
+    void Update(float dt);
     void Render();
     void InputHandler();
     void Reset(bool hardReset = false);
@@ -71,7 +70,7 @@ private:
     //
     float mAppleGenCheckpoint;
     float mBonusSpeed; // bonus snake speed for the eaten apple
-    Timer mTimer;
+    SpeedTimer mSpeedTimer;
     //
     int mScore;
     std::string mRank;

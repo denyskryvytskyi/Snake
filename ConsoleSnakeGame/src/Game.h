@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "common_types.h"
+#include "Timer.h"
 
 class GameManager;
 class MenuManager;
@@ -50,5 +51,7 @@ private:
     bool mRunning;
     std::thread mUpdateThread;
     std::thread mRenderThread;
+    //
+    Timer mTimer;
 };
 
