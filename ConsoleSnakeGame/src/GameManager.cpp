@@ -6,9 +6,10 @@
 #include "defines.h"
 
 GameManager::GameManager()
-    : mAppleGenCheckpoint(0.0f)
-    , mBonusSpeed(0.0f)
+    //: mAppleGenCheckpoint(0.0f)
+    : mBonusSpeed(0.0f)
     , mSpeedTimer()
+    , mAppleGenerationTimer()
     , mScore(0)
     , mRank()
     , mScoreRowIndex(0)
@@ -43,9 +44,12 @@ GameManager::~GameManager()
 void GameManager::Init()
 {
     Reset();
-    mSpeedTimer.Init();
 
     GameParams gameParams = GameParams::instance();
+
+    mSpeedTimer.Init(gameParams.mSnakeMoveUpdateWaitTime);
+    mAppleGenerationTimer.Init(gameParams.mAppleGenerationTimeInterval);
+
     mScoreRowIndex = gameParams.mScoreRowIndex;
     mRankRowIndex = gameParams.mRankRowIndex;
 }
@@ -68,12 +72,14 @@ void GameManager::Update(float dt)
     calcRank();
 
     // generate apple after timout
-    if (mAppleGenCheckpoint <= 0)
+    if (mAppleGenerationTimer.IsOver())
     {
-        mAppleGenCheckpoint = GameParams::instance().mAppleGenerateTimeInterval;
+        mAppleGenerationTimer.Restart();
+        //mAppleGenCheckpoint = GameParams::instance().mAppleGenerateTimeInterval;
         generateApple();
     }
-    --mAppleGenCheckpoint;
+    mAppleGenerationTimer.OnTick(dt);
+    //--mAppleGenCheckpoint;
 
     /*
     * Map update
@@ -156,7 +162,7 @@ void GameManager::Reset(bool hardReset /*= false*/)
     GameParams gameParams = GameParams::instance();
 
     mBonusSpeed = gameParams.mSnakeBonusSpeed;
-    mAppleGenCheckpoint = gameParams.mAppleGenerateTimeInterval;
+  /*  mAppleGenCheckpoint = gameParams.mAppleGenerateTimeInterval;*/
 
     if (hardReset)
     {
@@ -297,21 +303,21 @@ void GameManager::calcRank()
     }
 }
 
-SpeedTimer::SpeedTimer()
+SnakeTimer::SnakeTimer()
     : mWaitTime(0.0f)
     , mCurrentTime(0.0f)
 {
 }
 
-void SpeedTimer::Init()
+void SnakeTimer::Init(float waitTime)
 {
-    GameParams gameParams = GameParams::instance();
-    mWaitTime = gameParams.mSnakeMoveUpdateWaitTime;
+    //GameParams gameParams = GameParams::instance();
+    mWaitTime = waitTime;
 
     Restart();
 }
 
-void SpeedTimer::Restart(float bonusTime /* =0.0f*/)
+void SnakeTimer::Restart(float bonusTime /* =0.0f*/)
 {
     mCurrentTime = mWaitTime - bonusTime;
 }

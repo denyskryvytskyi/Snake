@@ -16,10 +16,10 @@ public:
     const int mWidth = 60;
     const int mHeight = 28;
 
-    const float mAppleGenerateTimeInterval = 50.0f;
+    const float mAppleGenerationTimeInterval = 3.0f; // as seconds
 
-    const float mSnakeMoveUpdateWaitTime = 1.0f; // in seconds
-    const float mSnakeBonusSpeed = 0.2f; // in seconds
+    const float mSnakeMoveUpdateWaitTime = 0.75f; // as seconds
+    const float mSnakeBonusSpeed = 0.15f; // as seconds
 
     const int mScoreRowIndex = 10;
     const int mRankRowIndex = 12;

@@ -137,7 +137,6 @@ void Game::Update()
         {
             Stop();
         }
-        /*mTimer.reset();*/
     }
 }
 
