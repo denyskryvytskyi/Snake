@@ -3,18 +3,14 @@
 class GameParams
 {
 public:
-    static GameParams* GetInstance();
-
-    GameParams(const GameParams&) = delete;
-    GameParams& operator=(const GameParams&) = delete;
+    static GameParams& instance();
 
 private:
     GameParams() = default;
-    ~GameParams() = default;
 
 public:
     const int mWidth = 60;
-    const int mHeight = 8;
+    const int mHeight = 28;
 
     const float mAppleGenerateTimeInterval = 50.0f;
 
@@ -26,7 +22,4 @@ public:
     const int mRankRowIndex = 12;
 
     const float mAiChangeDirTimeInterval = 8.0f;
-
-private:
-    static GameParams* instance;
 };

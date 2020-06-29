@@ -17,7 +17,6 @@ GameManager::GameManager()
 {
     mSnake = new Snake();
     mMap = new Map();
-    mGameParams = GameParams::GetInstance();
 
     mRankNames = {
         {2, "Worm"},
@@ -45,15 +44,18 @@ void GameManager::Init()
     Reset();
     mTimer.Init();
 
-    mScoreRowIndex = mGameParams->mScoreRowIndex;
-    mRankRowIndex = mGameParams->mRankRowIndex;
+    GameParams gameParams = GameParams::instance();
+    mScoreRowIndex = gameParams.mScoreRowIndex;
+    mRankRowIndex = gameParams.mRankRowIndex;
 }
 
 void GameManager::OnStart(bool isDemoMode)
 {
+    GameParams gameParams = GameParams::instance();
+
     Position newSnakeStartPos = getRandStartSnakePos();
     mSnake->Init(newSnakeStartPos, isDemoMode);
-    mMap->Init(mGameParams->mWidth, mGameParams->mHeight);
+    mMap->Init(gameParams.mWidth, gameParams.mHeight);
     // Setup snake head
     mMap->SetCell(positionToMapIndex(newSnakeStartPos), "snake_head", Cell::ECellState::Snake);
 }
@@ -63,7 +65,7 @@ void GameManager::Update()
     // generate apple after timout
     if (mAppleGenCheckpoint <= 0)
     {
-        mAppleGenCheckpoint = mGameParams->mAppleGenerateTimeInterval;
+        mAppleGenCheckpoint = GameParams::instance().mAppleGenerateTimeInterval;
         generateApple();
     }
     --mAppleGenCheckpoint;
@@ -149,8 +151,10 @@ void GameManager::Render()
 
 void GameManager::Reset(bool hardReset /*= false*/)
 {
-    mBonusSpeed = mGameParams->mSnakeBonusSpeed;
-    mAppleGenCheckpoint = mGameParams->mAppleGenerateTimeInterval;
+    GameParams gameParams = GameParams::instance();
+
+    mBonusSpeed = gameParams.mSnakeBonusSpeed;
+    mAppleGenCheckpoint = gameParams.mAppleGenerateTimeInterval;
 
     if (hardReset)
     {
@@ -218,17 +222,18 @@ GameManager::ECollisionType GameManager::checkCollision()
 // Convert (x;y) position of snake body item to map cell format
 int GameManager::positionToMapIndex(const Position& pos) const
 {
-    return mGameParams->mWidth * pos.GetY() + pos.GetX();
+    return GameParams::instance().mWidth * pos.GetY() + pos.GetX();
 }
 
 void GameManager::generateApple()
 {
+    GameParams gameParams = GameParams::instance();
     srand(time(0));
     // try generate apple position on map
     while (true)
     {
-        int applePosX = rand() % (mGameParams->mWidth - 2) + 1;
-        int applePosY = rand() % (mGameParams->mHeight - 2) + 1;
+        int applePosX = rand() % (gameParams.mWidth - 2) + 1;
+        int applePosY = rand() % (gameParams.mHeight - 2) + 1;
 
         int appleIndex = positionToMapIndex(Position(applePosX, applePosY));
 
@@ -267,8 +272,9 @@ void GameManager::addSnakeItem(const Position newItemPos)
 // Generate random position of snake head on the map
 Position GameManager::getRandStartSnakePos()
 {
-    int width = mGameParams->mWidth;
-    int height = mGameParams->mHeight;
+    GameParams gameParams = GameParams::instance();
+    int width = gameParams.mWidth;
+    int height = gameParams.mHeight;
     srand(time(0));
     int x = rand() % (width / 2) + width / 3;
     int y = rand() % (height / 2) + height / 3;
@@ -298,9 +304,9 @@ Timer::Timer()
 
 void Timer::Init()
 {
-    GameParams* gameParams = GameParams::GetInstance();
-    mDt = gameParams->mSnakeMoveUpdateDt;
-    mCheckpointGap = gameParams->mSnakeMoveUpdateGap;
+    GameParams gameParams = GameParams::instance();
+    mDt = gameParams.mSnakeMoveUpdateDt;
+    mCheckpointGap = gameParams.mSnakeMoveUpdateGap;
 
     Restart();
 }

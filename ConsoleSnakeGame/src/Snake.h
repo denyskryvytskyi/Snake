@@ -24,6 +24,7 @@ public:
 private:
     float mTimeToNextDirChange;
     float mCurrentTimeCheckpoint;
+    //
     bool mNeedChangeDir;
     bool mActive;
 };

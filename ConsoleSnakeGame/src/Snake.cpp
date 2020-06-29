@@ -86,7 +86,7 @@ AI::AI()
 void AI::Init()
 {
     mActive = true;
-    mTimeToNextDirChange = GameParams::GetInstance()->mAiChangeDirTimeInterval;
+    mTimeToNextDirChange = GameParams::instance().mAiChangeDirTimeInterval;
     mCurrentTimeCheckpoint = mTimeToNextDirChange;
 }
 

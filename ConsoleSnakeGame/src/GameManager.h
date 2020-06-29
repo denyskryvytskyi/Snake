@@ -68,7 +68,6 @@ private:
 private:
     Map* mMap;
     Snake* mSnake;
-    GameParams* mGameParams;
     //
     float mAppleGenCheckpoint;
     float mBonusSpeed; // bonus snake speed for the eaten apple
