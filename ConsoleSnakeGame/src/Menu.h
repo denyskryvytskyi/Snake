@@ -8,7 +8,7 @@
 struct MenuItem
 {
     friend class Menu;
-    
+
 public:
     MenuItem(std::string name, EMenuState state)
         : mName(name)

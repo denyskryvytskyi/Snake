@@ -81,4 +81,6 @@ private:
     int mRankRowIndex;  // row of map where will be drawn player rank
     //
     bool mInputHanlderEnable;
+    //
+    bool mDemoMode;
 };

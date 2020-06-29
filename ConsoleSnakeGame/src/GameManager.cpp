@@ -14,6 +14,7 @@ GameManager::GameManager()
     , mScoreRowIndex(0)
     , mRankRowIndex(0)
     , mInputHanlderEnable(true)
+    , mDemoMode(false)
 {
     mSnake = new Snake();
     mMap = new Map();
@@ -51,10 +52,11 @@ void GameManager::Init()
 
 void GameManager::OnStart(bool isDemoMode)
 {
+    mDemoMode = isDemoMode;
     GameParams gameParams = GameParams::instance();
 
     Position newSnakeStartPos = getRandStartSnakePos();
-    mSnake->Init(newSnakeStartPos, isDemoMode);
+    mSnake->Init(newSnakeStartPos, mDemoMode);
     mMap->Init(gameParams.mWidth, gameParams.mHeight);
     // Setup snake head
     mMap->SetCell(positionToMapIndex(newSnakeStartPos), "snake_head", Cell::ECellState::Snake);
@@ -62,6 +64,9 @@ void GameManager::OnStart(bool isDemoMode)
 
 void GameManager::Update()
 {
+    // calculate current snake rank
+    calcRank();
+
     // generate apple after timout
     if (mAppleGenCheckpoint <= 0)
     {
@@ -69,9 +74,6 @@ void GameManager::Update()
         generateApple();
     }
     --mAppleGenCheckpoint;
-
-    // calculate current snake rank
-    calcRank();
 
     /*
     * Map update
@@ -168,7 +170,7 @@ void GameManager::Reset(bool hardReset /*= false*/)
 
 void GameManager::InputHandler()
 {
-    if (!mInputHanlderEnable)
+    if (!mInputHanlderEnable || mDemoMode)
         return;
 
     Snake::EDirection currentDir = mSnake->GetCurrentDir();

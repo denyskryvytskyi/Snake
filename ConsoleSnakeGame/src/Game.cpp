@@ -90,11 +90,14 @@ void Game::Update()
 {
     while (mRunning)
     {
-        // use semaphore to make synchronization with render thread
-        gUpdateSemaphore.Take();
         if (mState == EGameState::Menu)
         {
+            // use semaphore to make synchronization with render thread
+            gUpdateSemaphore.Take();
             EMenuState menuState = mMenuManager->GetMenuState();
+            // notify render thread to continue execution
+            gRenderSemaphore.Give();
+            //
             // if menu state isn't "Navigation", then change game state
             setStateByMenuChoice(menuState);
         }
@@ -109,7 +112,12 @@ void Game::Update()
         }
         else if (mState == EGameState::Play)
         {
+            // use semaphore to make synchronization with render thread
+            gUpdateSemaphore.Take();
             mGameManager->Update();
+            // notify render thread to continue execution
+            gRenderSemaphore.Give();
+
             if (!mGameManager->IsSnakeAlive())
             {
                 mState = EGameState::GameOver;
@@ -124,8 +132,6 @@ void Game::Update()
         {
             Stop();
         }
-        // notify render thread to continue execution
-        gRenderSemaphore.Give();
     }
 }
 
@@ -133,19 +139,24 @@ void Game::Render()
 {
     while (mRunning)
     {
-        // use semaphore to make synchronization with update thread
-        gRenderSemaphore.Take();
-
         // clean screen
         system("cls");
 
         if (mState == EGameState::Menu)
         {
+            // use semaphore to make synchronization with update thread
+            gRenderSemaphore.Take();
             mMenuManager->Render();
+            // notify update thread to continue execution
+            gUpdateSemaphore.Give();
         }
         else if (mState == EGameState::Play)
         {
+            // use semaphore to make synchronization with update thread
+            gRenderSemaphore.Take();
             mGameManager->Render();
+            // notify update thread to continue execution
+            gUpdateSemaphore.Give();
         }
         else if (mState == EGameState::GameOver)
         {
@@ -156,8 +167,6 @@ void Game::Render()
             std::cout << "Click ENTER to restart Game." << std::endl;
             std::cout << "Click BACKSPACE to return in Menu." << std::endl;
         }
-        // notify update thread to continue execution
-        gUpdateSemaphore.Give();
     }
 }
 
