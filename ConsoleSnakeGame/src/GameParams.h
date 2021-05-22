@@ -3,10 +3,10 @@
 class GameParams
 {
 public:
-    static GameParams& instance()
+    static GameParams* instance()
     {
         static GameParams* instance = new GameParams();
-        return *instance;
+        return instance;
     }
 
 private:
@@ -18,8 +18,9 @@ public:
 
     const float mAppleGenerationTimeInterval = 3.0f; // as seconds
 
-    const float mSnakeMoveUpdateWaitTime = 0.75f; // as seconds
+    const float mSnakeMoveUpdateWaitTime = 1.0f; // as seconds
     const float mSnakeBonusSpeed = 0.15f; // as seconds
+    const float mSnakeMaxSpeed = 0.9f; // as seconds
 
     const int mScoreRowIndex = 10;
     const int mRankRowIndex = 12;

@@ -88,4 +88,6 @@ private:
     bool mDemoMode;
     //
     std::vector<Position> mApplesPos; // container of apples positins for Demo Mode;
+    //
+    GameParams* mGameParams;
 };

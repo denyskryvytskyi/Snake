@@ -1,17 +1,17 @@
 #include <ctime>
 
 #include "Snake.h"
-#include "GameParams.h"
 
 Snake::Snake()
     : mBody()
     , mSpeed(0.0f)
+    , mMaxSpeed(0.0f)
     , mCurrentDir(ESnakeDirection::Up)
     , mAlive(true)
 {
 }
 
-void Snake::Init(Position headPos, bool isDemoMode)
+void Snake::Init(Position headPos, bool isDemoMode, float maxSpeed)
 {
     mBody.push_back(headPos);
 
@@ -19,6 +19,8 @@ void Snake::Init(Position headPos, bool isDemoMode)
     {
         mAi.Init();
     }
+
+    mMaxSpeed = maxSpeed;
 }
 
 void Snake::Update()

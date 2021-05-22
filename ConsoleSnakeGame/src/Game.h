@@ -7,6 +7,7 @@
 
 class GameManager;
 class MenuManager;
+class GameParams;
 
 class Game
 {
@@ -42,6 +43,8 @@ public:
 private:
     void setStateByMenuChoice(EMenuState state);
 
+    void CleanConsole();
+
 private:
     EGameState mState;
     //
@@ -53,5 +56,7 @@ private:
     std::thread mRenderThread;
     //
     Timer mTimer;
+    //
+    bool mIsForceCls;
 };
 

@@ -18,6 +18,7 @@ GameManager::GameManager()
 {
     mSnake = new Snake();
     mMap = new Map();
+    mGameParams = GameParams::instance();
 
     mRankNames = {
         {2, "Worm"},
@@ -44,23 +45,20 @@ void GameManager::Init()
 {
     Reset();
 
-    GameParams gameParams = GameParams::instance();
+    mSpeedTimer.Init(mGameParams->mSnakeMoveUpdateWaitTime);
+    mAppleGenerationTimer.Init(mGameParams->mAppleGenerationTimeInterval);
 
-    mSpeedTimer.Init(gameParams.mSnakeMoveUpdateWaitTime);
-    mAppleGenerationTimer.Init(gameParams.mAppleGenerationTimeInterval);
-
-    mScoreRowIndex = gameParams.mScoreRowIndex;
-    mRankRowIndex = gameParams.mRankRowIndex;
+    mScoreRowIndex = mGameParams->mScoreRowIndex;
+    mRankRowIndex = mGameParams->mRankRowIndex;
 }
 
 void GameManager::OnStart(bool isDemoMode)
 {
     mDemoMode = isDemoMode;
-    GameParams gameParams = GameParams::instance();
 
     Position newSnakeStartPos = getRandStartSnakePos();
-    mSnake->Init(newSnakeStartPos, mDemoMode);
-    mMap->Init(gameParams.mWidth, gameParams.mHeight);
+    mSnake->Init(newSnakeStartPos, mDemoMode, mGameParams->mSnakeMaxSpeed);
+    mMap->Init(mGameParams->mWidth, mGameParams->mHeight);
     // setup snake head
     mMap->SetCell(positionToMapIndex(newSnakeStartPos), "snake_head", Cell::ECellState::Snake);
     // generate forst apple
@@ -167,9 +165,7 @@ void GameManager::Render()
 
 void GameManager::Reset(bool hardReset /*= false*/)
 {
-    GameParams gameParams = GameParams::instance();
-
-    mBonusSpeed = gameParams.mSnakeBonusSpeed;
+    mBonusSpeed = mGameParams->mSnakeBonusSpeed;
 
     if (hardReset)
     {
@@ -237,18 +233,17 @@ GameManager::ECollisionType GameManager::checkCollision()
 // Convert (x;y) position of snake body item to map cell format
 int GameManager::positionToMapIndex(const Position& pos) const
 {
-    return GameParams::instance().mWidth * pos.GetY() + pos.GetX();
+    return mGameParams->mWidth * pos.GetY() + pos.GetX();
 }
 
 void GameManager::generateApple()
 {
-    GameParams gameParams = GameParams::instance();
     srand(time(0));
     // try generate apple position on map
     while (true)
     {
-        int applePosX = rand() % (gameParams.mWidth - 2) + 1;
-        int applePosY = rand() % (gameParams.mHeight - 2) + 1;
+        int applePosX = rand() % (mGameParams->mWidth - 2) + 1;
+        int applePosY = rand() % (mGameParams->mHeight - 2) + 1;
 
         Position applePos = Position(applePosX, applePosY);
         mApplesPos.push_back(applePos);
@@ -290,9 +285,8 @@ void GameManager::addSnakeItem(const Position newItemPos)
 // Generate random position of snake head on the map
 Position GameManager::getRandStartSnakePos()
 {
-    GameParams gameParams = GameParams::instance();
-    int width = gameParams.mWidth;
-    int height = gameParams.mHeight;
+    int width = mGameParams->mWidth;
+    int height = mGameParams->mHeight;
     srand(time(0));
     int x = rand() % (width / 2) + width / 3;
     int y = rand() % (height / 2) + height / 3;

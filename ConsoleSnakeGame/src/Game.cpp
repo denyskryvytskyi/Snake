@@ -15,6 +15,7 @@ Game::Game()
     , mRunning(false)
     , mUpdateThread(&Game::Update, this)
     , mRenderThread(&Game::Render, this)
+    , mIsForceCls(false)
 {
     mMenuManager = new MenuManager();
     mGameManager = new GameManager();
@@ -76,10 +77,12 @@ void Game::ProcessInput()
         {
             if (GetAsyncKeyState(KEY_ENTER))
             {
+                mIsForceCls = true;
                 mState = EGameState::BeforePlay;
             }
             else if (GetAsyncKeyState(KEY_BACKSPACE))
             {
+                mIsForceCls = true;
                 mState = EGameState::BackToMenu;
             }
         }
@@ -125,6 +128,7 @@ void Game::Update()
 
             if (!mGameManager->IsSnakeAlive())
             {
+                mIsForceCls = true;
                 mState = EGameState::GameOver;
             }
         }
@@ -144,8 +148,7 @@ void Game::Render()
 {
     while (mRunning)
     {
-        // clean screen
-        system("cls");
+        CleanConsole();
 
         if (mState == EGameState::Menu)
         {
@@ -172,6 +175,7 @@ void Game::Render()
             std::cout << "Click ENTER to restart Game." << std::endl;
             std::cout << "Click BACKSPACE to return in Menu." << std::endl;
         }
+        
     }
 }
 
@@ -194,5 +198,20 @@ void Game::setStateByMenuChoice(EMenuState state)
     case EMenuState::Exit:
         mState = EGameState::Exit;
         break;
+    }
+}
+
+void Game::CleanConsole()
+{
+    HANDLE hd = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD cd;
+    cd.X = 0;
+    cd.Y = 0;
+    SetConsoleCursorPosition(hd, cd);
+
+    if (mIsForceCls)
+    {
+        system("cls");
+        mIsForceCls = false;
     }
 }

@@ -32,7 +32,7 @@ class Snake
 public:
     Snake();
     //
-    void Init(Position headPos, bool isDemoMode);
+    void Init(Position headPos, bool isDemoMode, float maxSpeed);
     void Update();
     void Reset();
     //
@@ -42,7 +42,7 @@ public:
     void SetAlive(const bool alive) { mAlive = alive; }
     float GetSpeed() const { return mSpeed; }
     //
-    void IncreaseSpeed(const float increaseSpeed) { mSpeed += increaseSpeed; }
+    void IncreaseSpeed(const float increaseSpeed) { if (mSpeed + increaseSpeed <= mMaxSpeed) mSpeed += increaseSpeed; }
     void ChangeDirection(ESnakeDirection newDir);
     //
     bool IsAlive() const { return mAlive; }
@@ -50,11 +50,12 @@ public:
     void SetAIApplePos(const Position& applePos);
 
 private:
-    PositionArray mBody;    // indices of Map cells with state ECellState_Snake
-    float mSpeed;           // current speed
-    ESnakeDirection mCurrentDir; // direction of movement
+    PositionArray mBody;            // indices of Map cells with state ECellState_Snake
+    float mSpeed;                   // current speed
+    float mMaxSpeed;
+    ESnakeDirection mCurrentDir;    // direction of movement
     bool mAlive;
     //
-    AI mAi; // for the demo mode
+    AI mAi;                         // for the demo mode
 };
 
