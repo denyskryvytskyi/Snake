@@ -1,20 +1,16 @@
 #include <windows.h>
 #include <iostream>
+#include <thread>
 
 #include "Game.h"
 #include "GameManager.h"
 #include "MenuManager.h"
+#include "Timer.h"
 #include "defines.h"
-#include "Semaphore.h"
-
-Semaphore gUpdateSemaphore(1);
-Semaphore gRenderSemaphore(0);
 
 Game::Game()
     : mState(EGameState::Menu)
     , mRunning(false)
-    , mUpdateThread(&Game::Update, this)
-    , mRenderThread(&Game::Render, this)
     , mIsForceCls(false)
 {
     mMenuManager = new MenuManager();
@@ -23,10 +19,6 @@ Game::Game()
 
 Game::~Game()
 {
-    // wait when the threads execution has completed
-    mUpdateThread.join();
-    mRenderThread.join();
-
     if (mMenuManager != nullptr)
     {
         delete mMenuManager;
@@ -39,14 +31,19 @@ Game::~Game()
 
 void Game::Start()
 {
-    // initialize all subsystems on game start
     Init();
 
-    // now threads can be do the work
-    mRunning = true;
+    Timer timer;
+    while (mRunning)
+    {
+        ProcessInput();
 
-    // input handling in the main thread
-    ProcessInput();
+        float elapsedTime = timer.Elapsed();
+        timer.Restart();
+
+        Update(elapsedTime);
+        Render();
+    }
 }
 
 void Game::Stop()
@@ -57,125 +54,94 @@ void Game::Stop()
 void Game::Init()
 {
     mGameManager->Init();
+    mRunning = true;
 }
 
 void Game::ProcessInput()
 {
-    while (mRunning)
+    if (mState == EGameState::Menu)
     {
-        if (mState == EGameState::Menu)
+        mMenuManager->InputHandler();
+        // delay
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    else if (mState == EGameState::Play)
+    {
+        mGameManager->InputHandler();
+    }
+    else if (mState == EGameState::GameOver)
+    {
+        if (GetAsyncKeyState(KEY_ENTER))
         {
-            mMenuManager->InputHandler();
-            // delay
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            mIsForceCls = true;
+            mState = EGameState::BeforePlay;
         }
-        else if (mState == EGameState::Play)
+        else if (GetAsyncKeyState(KEY_BACKSPACE))
         {
-            mGameManager->InputHandler();
-        }
-        else if (mState == EGameState::GameOver)
-        {
-            if (GetAsyncKeyState(KEY_ENTER))
-            {
-                mIsForceCls = true;
-                mState = EGameState::BeforePlay;
-            }
-            else if (GetAsyncKeyState(KEY_BACKSPACE))
-            {
-                mIsForceCls = true;
-                mState = EGameState::BackToMenu;
-            }
+            mIsForceCls = true;
+            mState = EGameState::BackToMenu;
         }
     }
 }
 
-void Game::Update()
+void Game::Update(float dt)
 {
-    mTimer.reset();
-    float elapsedTime;
-    while (mRunning)
+    if (mState == EGameState::Menu)
     {
-        // get deltatime as seconds
-        elapsedTime = mTimer.elapsed();
-        mTimer.reset();
-        if (mState == EGameState::Menu)
-        {
-            // use semaphore to make synchronization with render thread
-            gUpdateSemaphore.Take();
-            EMenuState menuState = mMenuManager->GetMenuState();
-            // notify render thread to continue execution
-            gRenderSemaphore.Give();
-            //
-            // if menu state isn't "Navigation", then change game state
-            setStateByMenuChoice(menuState);
-        }
-        else if (mState == EGameState::BeforePlay || mState == EGameState::Demo)
-        {
-            // Reset if it's not a first game in session
-            Reset();
+        EMenuState menuState = mMenuManager->GetMenuState();
+        // if menu state isn't "Navigation", then change game state
+        SetStateByMenuChoice(menuState);
+    }
+    else if (mState == EGameState::BeforePlay || mState == EGameState::Demo)
+    {
+        // Reset if it's not a first game in session
+        Reset();
 
-            // Before game initializations
-            mGameManager->OnStart(mState == EGameState::Demo || mMenuManager->GetMenuState() == EMenuState::Demo);
-            mState = EGameState::Play;
-        }
-        else if (mState == EGameState::Play)
-        {
-            // use semaphore to make synchronization with render thread
-            gUpdateSemaphore.Take();
-            mGameManager->Update(elapsedTime);
-            // notify render thread to continue execution
-            gRenderSemaphore.Give();
+        // Before game initializations
+        mGameManager->OnStart(mState == EGameState::Demo || mMenuManager->GetMenuState() == EMenuState::Demo);
+        mState = EGameState::Play;
+    }
+    else if (mState == EGameState::Play)
+    {
+        mGameManager->Update(dt);
 
-            if (!mGameManager->IsSnakeAlive())
-            {
-                mIsForceCls = true;
-                mState = EGameState::GameOver;
-            }
-        }
-        else if (mState == EGameState::BackToMenu)
+        if (!mGameManager->IsSnakeAlive())
         {
-            mMenuManager->Reset(true);
-            mState = EGameState::Menu;
+            mIsForceCls = true;
+            mState = EGameState::GameOver;
         }
-        else if (mState == EGameState::Exit)
-        {
-            Stop();
-        }
+    }
+    else if (mState == EGameState::BackToMenu)
+    {
+        mMenuManager->Reset(true);
+        mState = EGameState::Menu;
+    }
+    else if (mState == EGameState::Exit)
+    {
+        Stop();
     }
 }
 
 void Game::Render()
 {
-    while (mRunning)
-    {
-        CleanConsole();
+    CleanConsole();
 
-        if (mState == EGameState::Menu)
-        {
-            // use semaphore to make synchronization with update thread
-            gRenderSemaphore.Take();
-            mMenuManager->Render();
-            // notify update thread to continue execution
-            gUpdateSemaphore.Give();
-        }
-        else if (mState == EGameState::Play)
-        {
-            // use semaphore to make synchronization with update thread
-            gRenderSemaphore.Take();
-            mGameManager->Render();
-            // notify update thread to continue execution
-            gUpdateSemaphore.Give();
-        }
-        else if (mState == EGameState::GameOver)
-        {
-            // simple menu after game
-            std::cout << "Game Over!" << std::endl;
-            std::cout << "Score: " << mGameManager->GetScore() << std::endl;
-            std::cout << "Rank: " << mGameManager->GetRank() << std::endl;
-            std::cout << "Click ENTER to restart Game." << std::endl;
-            std::cout << "Click BACKSPACE to return in Menu." << std::endl;
-        }
-        
+    if (mState == EGameState::Menu)
+    {
+        mMenuManager->Render();
+    }
+    else if (mState == EGameState::Play)
+    {
+        mGameManager->Render();
+    }
+    else if (mState == EGameState::GameOver)
+    {
+        // simple menu after game
+        std::cout << "Game Over!" << std::endl;
+        std::cout << "Score: " << mGameManager->GetScore() << std::endl;
+        std::cout << "Rank: " << mGameManager->GetRank() << std::endl;
+        std::cout << "Click ENTER to restart Game." << std::endl;
+        std::cout << "Click BACKSPACE to return in Menu." << std::endl;
     }
 }
 
@@ -185,7 +151,7 @@ void Game::Reset()
     mMenuManager->Reset();
 }
 
-void Game::setStateByMenuChoice(EMenuState state)
+void Game::SetStateByMenuChoice(EMenuState state)
 {
     switch (state)
     {

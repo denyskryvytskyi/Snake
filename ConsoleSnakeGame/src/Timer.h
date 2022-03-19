@@ -12,11 +12,11 @@ public:
         : begin(clock::now())
     {}
 
-    // reset timer to current time
-    void reset() { begin = clock::now(); }
+    // restart timer to current time
+    void Restart() { begin = clock::now(); }
 
     // get delta time as seconds
-    float elapsed() const { return std::chrono::duration_cast<second>(clock::now() - begin).count(); }
+    float Elapsed() const { return std::chrono::duration_cast<second>(clock::now() - begin).count(); }
 
 private:
     typedef std::chrono::high_resolution_clock clock;

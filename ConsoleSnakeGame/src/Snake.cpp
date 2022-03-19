@@ -106,7 +106,7 @@ ESnakeDirection AI::GenerateDirection(Position snakeHeadPos, ESnakeDirection cur
     }
     if (snakeX < appleX && currentDir != ESnakeDirection::Left)
     {
-        return ESnakeDirection::Right /*: ESnakeDirection::Down*/;
+        return ESnakeDirection::Right;
     }
     if (snakeY > appleY && currentDir != ESnakeDirection::Down)
     {

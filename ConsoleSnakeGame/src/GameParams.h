@@ -20,7 +20,7 @@ public:
 
     const float mSnakeMoveUpdateWaitTime = 1.0f; // as seconds
     const float mSnakeBonusSpeed = 0.15f; // as seconds
-    const float mSnakeMaxSpeed = 0.9f; // as seconds
+    const float mSnakeMaxSpeed = 1.0f; // as seconds
 
     const int mScoreRowIndex = 10;
     const int mRankRowIndex = 12;

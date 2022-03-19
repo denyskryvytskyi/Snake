@@ -1,9 +1,6 @@
 #pragma once
 
-#include <thread>
-
 #include "common_types.h"
-#include "Timer.h"
 
 class GameManager;
 class MenuManager;
@@ -33,7 +30,7 @@ public:
     void Init();
     //
     void ProcessInput();
-    void Update();
+    void Update(float dt);
     void Render();
     void Reset();
     //
@@ -41,8 +38,7 @@ public:
     bool IsRunning() const { return mRunning; }
 
 private:
-    void setStateByMenuChoice(EMenuState state);
-
+    void SetStateByMenuChoice(EMenuState state);
     void CleanConsole();
 
 private:
@@ -52,11 +48,6 @@ private:
     GameManager* mGameManager;
     //
     bool mRunning;
-    std::thread mUpdateThread;
-    std::thread mRenderThread;
-    //
-    Timer mTimer;
-    //
     bool mIsForceCls;
 };
 

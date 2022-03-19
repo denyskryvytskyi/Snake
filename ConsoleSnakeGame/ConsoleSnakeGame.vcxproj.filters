@@ -68,9 +68,6 @@
     <ClInclude Include="src\common_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Semaphore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
